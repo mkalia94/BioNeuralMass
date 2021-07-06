@@ -1,5 +1,5 @@
 function Par(nm)
-    nm.hp.ratio             = 0.8f0
+    nm.hp.ratio             = 0.8
     nm.Ari0             = 4*pi*(nm.rcell)^2/1000;             # [mu m^2], Membrane surface of neuron
     nm.Wi0             = (4/3)*pi*(nm.rcell)^3/1000;         # [mu m^3], Volume of spherical cell
     nm.We0             = nm.hp.ratio*(2*nm.Wi0)/(1-nm.hp.ratio)
@@ -8,10 +8,10 @@ function Par(nm)
     nm.CNa               = nm.NaCe0*nm.We0+(nm.NaCiE0+ nm.NaCiI0)*nm.Wi0;
     nm.CK                = nm.KCe0*nm.We0 +(nm.KCiE0 + nm.KCiI0)*nm.Wi0;
     nm.CCl               = nm.ClCe0*nm.We0+(nm.ClCiE0+ nm.ClCiI0)*nm.Wi0;
-    nm.E_na_E_0          = 26.64f0*log(nm.NaCe0/nm.NaCiE0);       # [mV], Initial Nernst potential of sodium
-    nm.E_na_I_0          = 26.64f0*log(nm.NaCe0/nm.NaCiI0);       # [mV], Initial Nernst potential of sodium of inhibitory population
-    nm.E_k_E_0           = 26.64f0*log(nm.KCe0/nm.KCiE0);         # [mV], Initial Nernst potential of potassium
-    nm.E_k_I_0           = 26.64f0*log(nm.KCe0/nm.KCiI0);         # [mV], Initial Nernst potential of potassium of inhibitory population
+    nm.E_na_E_0          = 26.64*log(nm.NaCe0/nm.NaCiE0);       # [mV], Initial Nernst potential of sodium
+    nm.E_na_I_0          = 26.64*log(nm.NaCe0/nm.NaCiI0);       # [mV], Initial Nernst potential of sodium of inhibitory population
+    nm.E_k_E_0           = 26.64*log(nm.KCe0/nm.KCiE0);         # [mV], Initial Nernst potential of potassium
+    nm.E_k_I_0           = 26.64*log(nm.KCe0/nm.KCiI0);         # [mV], Initial Nernst potential of potassium of inhibitory population
 
     # Get impermeants
     nm.NAi           = nm.Wi0*(-nm.C*nm.Vi0/nm.F/nm.Wi0 + nm.NaCiI0 + nm.KCiI0 - nm.ClCiI0)
@@ -25,7 +25,7 @@ function Par(nm)
 
     # Get leak conductances
     # Excitatory
-    X0 = [nm.NaCiE0*nm.Wi0,nm.NaCiI0*nm.Wi0,nm.KCiE0*nm.Wi0,nm.KCiI0*nm.Wi0,nm.ClCiE0*nm.Wi0,nm.ClCiI0*nm.Wi0,0.08f0,0.008f0,nm.Wi0,nm.Wi0] 
+    X0 = [nm.NaCiE0*nm.Wi0,nm.NaCiI0*nm.Wi0,nm.KCiE0*nm.Wi0,nm.KCiI0*nm.Wi0,nm.ClCiE0*nm.Wi0,nm.ClCiI0*nm.Wi0,0.08,0.008,nm.Wi0,nm.Wi0] 
     I_TNa_E = nm(X0,0,0,"I_TNa_E")
     I_DK_E = nm(X0,0,0,"I_DK_E")
     I_GCl_E = nm(X0,0,0,"I_GCl_E")
@@ -46,7 +46,7 @@ function Par(nm)
         throw(DomainError(nm.PclL,"Cl leak conductance should be nonnegative"))
     end 
     
-    nm.hp.excite        = [0.03f0,20.0f0,20.5f0,5f4]
+    nm.hp.excite        = [0.03,20.0,20.5,5f4]
     nm.X0 = X0
 end
 
