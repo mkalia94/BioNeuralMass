@@ -97,7 +97,7 @@ function (nm::BioNM)(x,p,t,expr=nothing)
                                        NaCiE^(1.5)/(NaCiE^(1.5)+nm.nka_na^(1.5)))*(KCe/(KCe+nm.nka_k))
     Ipump_I = IBlock*fpump_I*nm.rho_p_E*(
                                        NaCiI^(1.5)/(NaCiI^(1.5)+nm.nka_na^(1.5)))*(KCe/(KCe+nm.nka_k))
-    FR_E                  = Firing_Rate(nm,I_E-Ipump_E+IExcite,E_k_E,E_na_E);                                     # [1/ms], Firing Rate
+    FR_E                  = Firing_Rate(nm,I_E-Ipump_E,E_k_E,E_na_E);                                     # [1/ms], Firing Rate
     FR_I                  = Firing_Rate(nm,I_I-Ipump_I,E_k_I,E_na_I);                                     # [1/ms], Firing Rate
     # FR_E = 0.0f0
     # FR_I = 0.0f0
@@ -240,11 +240,7 @@ dX = [(1/(nm.F))*(-I_LNa_E-I_TNa_E - 3*Ipump_E + IExcite)  + 1/nm.F*I_EE;       
     elseif expr == "WiE"    ; return  WiE
     elseif expr == "We"    ; return  We
     elseif expr == "I_E"    ; return I_E
-    elseif expr == "I_I"    ; return I_I
-    elseif expr == "I_EI"    ; return I_EI
-    elseif expr == "I_EE"    ; return I_EE
-    elseif expr == "I_IE"    ; return I_IE
-    elseif expr == "I_II"     ; return I_II
+    elseif expr == "I_I"     ; return I_I
 end
 end
 
