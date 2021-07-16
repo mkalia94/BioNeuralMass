@@ -161,12 +161,12 @@ function (nm::BioNM)(x,p,t,expr=nothing)
 
     # State vector
 
-dX = [(1/(nm.F))*(-I_LNa_E-I_TNa_E - 3*Ipump_E + IExcite)  + 1/nm.F*I_EE;           # Na_i excitatory
-           (1/(nm.F))*(-I_LNa_I-I_TNa_I - 3*Ipump_I)  + 1/nm.F*I_EI;          # Na_i inhibitory
-           (1/(nm.F))*(-I_LK_E-I_DK_E   + 2*Ipump_E)    - J_KCL_E;                         # dK_i/dt excitatory
-           (1/(nm.F))*(-I_LK_I-I_DK_I   + 2*Ipump_I)    - J_KCL_I;                         # dK_i/dt inhibitory
-           (1/(nm.F))*(I_LCl_E+I_GCl_E)   - J_KCL_E + 1/nm.F*I_IE;                        # dCl_i/dt excitatory
-           (1/(nm.F))*(I_LCl_I+I_GCl_I)   - J_KCL_I + 1/nm.F*I_II;                   # dK_i/dt  inhibitory
+dX = [(1/(nm.F))*(-I_LNa_E-I_TNa_E - 3*Ipump_E); #  + 1/nm.F*I_EE;           # Na_i excitatory
+           (1/(nm.F))*(-I_LNa_I-I_TNa_I - 3*Ipump_I); #  + 1/nm.F*I_EI;          # Na_i inhibitory
+           (1/(nm.F))*(-I_LK_E-I_DK_E   + 2*Ipump_E)     - J_KCL_E;                         # dK_i/dt excitatory
+           (1/(nm.F))*(-I_LK_I-I_DK_I   + 2*Ipump_I)     - J_KCL_I;                         # dK_i/dt inhibitory
+           (1/(nm.F))*(I_LCl_E+I_GCl_E)   - J_KCL_E; # + 1/nm.F*I_IE;                        # dCl_i/dt excitatory
+           (1/(nm.F))*(I_LCl_I+I_GCl_I)   - J_KCL_I; # + 1/nm.F*I_II;                   # dK_i/dt  inhibitory
            off_*(ampa(nm,FR_E,0)*(1-rAMPA)-nm.b_ampa*rAMPA);                                                                                 # dr_AMPA/dt
            off_*(gaba(nm,FR_I,0)*(1-rGABA)-nm.b_gaba*rGABA);
            nm.PWi*nm.R*nm.T*(SCiE-SCe);
