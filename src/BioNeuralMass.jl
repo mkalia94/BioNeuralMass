@@ -1,14 +1,19 @@
 module BioNeuralMass
 
 using DifferentialEquations, Plots, QuadGK, LaTeXStrings, DSP, Waveforms
-include("build.jl")
-include("model.jl")
+include("pop.jl")
+include("neuralarea.jl")
 include("params.jl")
+include("synapse.jl")
 include("utils.jl")
 
-export HyperParam, InitVal, BioNM
-export Par
-export ampa, gaba, FiringRate
+
+export Area, Behaviour, Excitatory, Inhibitory, Thalamus, Cortex
+export HyperParam, NeuralPopSoma
+export NeuralArea, get_ECS
+export Par 
+export BioNM
 export solve, plot
+
 
 end # module

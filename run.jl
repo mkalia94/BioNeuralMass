@@ -3,44 +3,41 @@ dir = pwd()
 Pkg.activate("$(dir)/.")
 using BioNeuralMass, Sundials, DifferentialEquations, Plots, Waveforms
 
-hp_ = HyperParam(synapseoff=false)
-in_ = InitVal()
-nm = BioNM(hp = hp_, init = in_)
-Par(nm)
+nm = BioNM()
 
-nm.hp.excite = [20.0, 1000.0,1000.0 + 2*60*1000, 1e10]
-nm.hp.perc = 1
-nm.hp.tstart = 1000
-nm.hp.tend = 1000 + 2*60*1000
-nm.hp.tfinal = 5*60*1000
-nm.hp.beta1 = 0.004
-nm.hp.beta2 = 0.004
+# Set up cortical neural area
+hp = HyperParam(synapseoff = false, ratio = 0.8)
+pop1 = NeuralPopSoma{Cortex, Excitatory}()
+pop2 = NeuralPopSoma{Cortex, Inhibitory}()
+cortex_ = NeuralArea(hp,pop1,pop2);
+Par(hp,cortex_)
 
-nm.g_EE = nm.g_EE * 1e5
-nm.g_EI = nm.g_EI * 1e5
-nm.g_II = nm.g_II * 1e5
-nm.g_IE = nm.g_IE * 1e5
+# Set up Thalamic neural area
+pop1_T = NeuralPopSoma{Thalamus, Excitatory}()
+pop2_T = NeuralPopSoma{Thalamus,Inhibitory}()
+thalamus_ = NeuralArea(hp,pop1_T,pop2_T)
+Par(hp,thalamus_)
 
-nm.g_IE = 3
-nm.g_EE = 5
-nm.g_EI = 4
+thalamus_.pop1.syn_act *= 1e-1
+thalamus_.pop2.syn_act *= 1e-1
 
-nm.b_ampa = 0.05
-nm.b_gaba = 0.05
+thalamus_.pop1.syn_th = 0.5
+thalamus_.pop2.syn_th = 0.9
 
-nm.ampa_th = 0.1
-nm.gaba_th = 0.5
 
-nm.hp.saveat = 1
+# Set up neural mass
+nm.conn = [0.0 1 2.0 0.0; 0.5 0.0 1.5 0.0; 3.0 0.0 2.0  3.0; 3.0 0.0 1.0 0.5] #Thalamus first 
+nm.conn = [2.0 3.0  0.01 0.0; 1.0 0.5 0.01 0.0; 0.01 0.0 0.0 1; 0.01 0.0 0.5 0.0] #Cortex first 
 
-perc_ = [1, 0.8, 0.6, 0.4, 0.2]
+hp.excite = [20.0, 1000.0,1000.0 + 2*60*1000, 1e10]
+hp.perc = 0.2
+hp.tstart = 1000
+hp.tend = 1000 + 2*60*1000
+hp.tfinal = 3*60*1000
+hp.beta1 = 1
+hp.beta2 = 1
+hp.saveat = 1
 
-for p in perc_
-    nm.hp.perc = p
-    try 
-        solve(nm,reltol=1e-10,abstol=1e-10,saveat=nm.hp.saveat)
-    catch e
-    end  
-    plot(nm)
-    savefig("Perc$(p*100).pdf")
-end
+solve(nm,hp,[cortex_, thalamus_],saveat=hp.saveat,reltol=1e-9,abstol=1e-9)
+syn_curr = nm([cortex_,thalamus_],hp,"syn_curr")
+plot(syn_curr,layout = (2,2))

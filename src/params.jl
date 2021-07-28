@@ -1,52 +1,67 @@
-function Par(nm)
-    nm.hp.ratio             = 0.8
-    nm.Ari0             = 4*pi*(nm.rcell)^2/1000;             # [mu m^2], Membrane surface of neuron
-    nm.Wi0             = (4/3)*pi*(nm.rcell)^3/1000;         # [mu m^3], Volume of spherical cell
-    nm.We0             = nm.hp.ratio*(2*nm.Wi0)/(1-nm.hp.ratio)
-    nm.Wtot = 2*nm.Wi0 + nm.We0
-    nm.xi                = nm.F/(nm.R*nm.T);                # [1/mV]
-    nm.CNa               = nm.NaCe0*nm.We0+(nm.NaCiE0+ nm.NaCiI0)*nm.Wi0;
-    nm.CK                = nm.KCe0*nm.We0 +(nm.KCiE0 + nm.KCiI0)*nm.Wi0;
-    nm.CCl               = nm.ClCe0*nm.We0+(nm.ClCiE0+ nm.ClCiI0)*nm.Wi0;
-    nm.E_na_E_0          = 26.64*log(nm.NaCe0/nm.NaCiE0);       # [mV], Initial Nernst potential of sodium
-    nm.E_na_I_0          = 26.64*log(nm.NaCe0/nm.NaCiI0);       # [mV], Initial Nernst potential of sodium of inhibitory population
-    nm.E_k_E_0           = 26.64*log(nm.KCe0/nm.KCiE0);         # [mV], Initial Nernst potential of potassium
-    nm.E_k_I_0           = 26.64*log(nm.KCe0/nm.KCiI0);         # [mV], Initial Nernst potential of potassium of inhibitory population
+function NeuralArea(hp::HyperParam,pop1::NeuralPopSoma,pop2::NeuralPopSoma)
+     
+    # Get conservation constants
+    We0             = hp.ratio*(pop1.Wi0 + pop2.Wi0)/(1-hp.ratio)
+    Wtot            = pop1.Wi0 + pop2.Wi0 + We0
+    CNa             = pop1.NaCe0*We0+pop1.NaCi0*pop1.Wi0 + pop2.NaCi0*pop2.Wi0;
+    CK              = pop1.KCe0*We0 +pop1.KCi0*pop1.Wi0+ pop2.KCi0*pop2.Wi0;
+    CCl             = pop1.ClCe0*We0+pop1.ClCi0*pop1.Wi0+ pop2.ClCi0*pop2.Wi0;
+    
+    println("Neural Area successfully generated...")
+    NeuralArea(Wtot = Wtot,We0 = We0, CNa = CNa, CK = CK, CCl = CCl, pop1 = pop1, pop2 = pop2)    
+end 
+
+function Par(hp::HyperParam,area::NeuralArea,pop::NeuralPopSoma)
 
     # Get impermeants
-    nm.NAi           = nm.Wi0*(-nm.C*nm.Vi0/nm.F/nm.Wi0 + nm.NaCiI0 + nm.KCiI0 - nm.ClCiI0)
-    SCi              = nm.NaCiI0 + nm.KCiI0 + nm.ClCiI0 + nm.NAi/nm.Wi0
-    nm.NAe           = nm.We0*(SCi -nm.NaCe0 - nm.KCe0 - nm.ClCe0)
-    if nm.NAi < 0
-        throw(DomainError(nm.NAi,"Impermeant NAi showuld be nonnegative"))
-    elseif nm.NAe <0 
-        throw(DomainError(nm.NAe,"Impermeant NAe showuld be nonnegative"))
+    pop.NAi           = pop.Wi0*(-pop.C*pop.Vi0/pop.F/pop.Wi0 + pop.NaCi0 + pop.KCi0 - pop.ClCi0)
+    SCi              = pop.NaCi0 + pop.KCi0 + pop.ClCi0 + pop.NAi/pop.Wi0
+    area.NAe           = area.We0*(SCi -pop.NaCe0 - pop.KCe0 - pop.ClCe0)
+    if pop.NAi < 0
+        throw(DomainError(pop.NAi,"Impermeant NAi showuld be nonnegative"))
+    elseif area.NAe <0 
+        throw(DomainError(area.NAe,"Impermeant area.NAe showuld be nonnegative"))
+    end
+    
+    # Pop 1
+    X0 = [pop.NaCi0*pop.Wi0,pop.KCi0*pop.Wi0,pop.ClCi0*pop.Wi0,pop.Wi0] 
+    X_ECS = [pop.NaCe0, pop.KCe0,pop.ClCe0, area.We0, area.NAe]
+    INaG = pop(hp,X0,X_ECS, 0,"INaG")
+    IKG = pop(hp,X0,X_ECS,0,"IKG")
+    IClG = pop(hp,X0,X_ECS,0,"IClG")
+    IClL = pop(hp,X0,X_ECS,0,"IClL")/pop.PClL
+    INaL = pop(hp,X0,X_ECS,0,"INaL")/pop.PNaL
+    IKL = pop(hp,X0,X_ECS,0,"IKL")/pop.PKL
+    JKCl = pop(hp,X0,X_ECS,0,"JKCl")
+    Ipump = pop(hp,X0,X_ECS,0,"Ipump")
+    pop.PNaL = (-INaG - 3*Ipump)/INaL
+    pop.PKL = (-IKG + 2*Ipump - pop.F*JKCl)/IKL
+    pop.PClL = (-IClG + pop.F*JKCl)/IClL
+
+    if pop.PNaL < 0
+        throw(DomainError(pop.PNaL,"Na leak conductance should be nonnegative in Pop 1"))
+    elseif pop.PKL < 0
+        throw(DomainError(pop.PKL,"K leak conductance should be nonnegative in Pop 1"))
+    elseif pop.PClL < 0
+        throw(DomainError(pop.PClL,"Cl leak conductance should be nonnegative in Pop 1"))
     end
 
-    # Get leak conductances
-    # Excitatory
-    X0 = [nm.NaCiE0*nm.Wi0,nm.NaCiI0*nm.Wi0,nm.KCiE0*nm.Wi0,nm.KCiI0*nm.Wi0,nm.ClCiE0*nm.Wi0,nm.ClCiI0*nm.Wi0,0.08,0.008,nm.Wi0,nm.Wi0] 
-    I_TNa_E = nm(X0,0,0,"I_TNa_E")
-    I_DK_E = nm(X0,0,0,"I_DK_E")
-    I_GCl_E = nm(X0,0,0,"I_GCl_E")
-    I_LCl_E = nm(X0,0,0,"I_LCl_E")/nm.PclL
-    I_LNa_E = nm(X0,0,0,"I_LNa_E")/nm.PnaL
-    I_LK_E = nm(X0,0,0,"I_LK_E")/nm.PkL
-    J_KCL_E = nm(X0,0,0,"J_KCL_E")
-    Ipump_E = nm(X0,0,0,"Ipump_E")
-    nm.PnaL = (-I_TNa_E - 3*Ipump_E)/I_LNa_E
-    nm.PkL = (-I_DK_E + 2*Ipump_E - nm.F*J_KCL_E)/I_LK_E
-    nm.PclL = (-I_GCl_E + nm.F*J_KCL_E)/I_LCl_E
+    if typeof(pop).parameters[2] == Excitatory
+        pop.syn_act = 2.0
+        pop.syn_deact = 0.05
+        pop.syn_th = 0.1
+    else
+        pop.syn_act = 14.0  
+        pop.syn_deact = 0.05
+        pop.syn_th = 0.5
+    end
 
-    if nm.PnaL < 0
-        throw(DomainError(nm.PnaL,"Na leak conductance should be nonnegative"))
-    elseif nm.PkL < 0
-        throw(DomainError(nm.PkL,"K leak conductance should be nonnegative"))
-    elseif nm.PclL < 0
-        throw(DomainError(nm.PclL,"Cl leak conductance should be nonnegative"))
-    end 
-    
-    nm.hp.excite        = [0.03,20.0,20.5,5f4]
-    nm.X0 = X0
+    pop.X0 = X0
+
 end
 
+function Par(hp::HyperParam,area::NeuralArea)
+    Par(hp,area,area.pop1)
+    Par(hp,area,area.pop2)
+    area.X0 = [area.pop1.X0; area.pop2.X0; 0.008; 0.008]
+end
