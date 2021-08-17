@@ -1,19 +1,21 @@
 Base.@kwdef mutable struct BioNM
     conn :: Union{Matrix,Missing} = missing  # CAREFUL: size(conn) needs to be 2*(n_areas) x 2*(n_areas)
     sol :: Union{Missing,ODESolution} = missing
+    hp :: Union{HyperParam,Missing} = missing
+    areas :: Union{Vector{NeuralArea},Missing} = missing
 end
 
 function syn_current_pop(pop::NeuralPopSoma,x,x_ECS,t,type="Excitatory")
     if type == "Excitatory"
         NaCe = x_ECS[1]
         NaCi = x[1]/x[4]
-        # return rsyn*(MemPot(pop,x)-Nernst(pop,NaCe,NaCi))
-        return (NaCe-NaCi)
+        return -(MemPot(pop,x)-Nernst(pop,NaCe,NaCi))
+        #return (NaCe-NaCi)
     else
         ClCe = x_ECS[3]
         ClCi = x[3]/x[4]
-        return -(ClCe-ClCi)
-        # return -rsyn*(MemPot(pop,x)-Nernst(pop,ClCe,ClCi,z=-1))
+        #return -(ClCe-ClCi)
+        return -(MemPot(pop,x)-Nernst(pop,ClCe,ClCi,z=-1))
     end
 end
 
@@ -73,32 +75,32 @@ function syn_var_RHS(hp::HyperParam,area::NeuralArea,rsyn,x,t,I_Ext)
     return [syn1;syn2]
 end
 
-function (nm::BioNM)(areas::Vector{NeuralArea},hp::HyperParam,dx,x,p,t,expr=nothing)
+function (nm::BioNM)(dx,x,p,t,expr=nothing)
     
     # Note: x_Bio = [NNa,NK,NCl,W], x_syn = [rsyn]; x_area = [x_Bio_1,x_Bio_2,x_syn_1,x_syn_2]; x = [x_area_1...] 
 
     # External stimulation
-    if !ismissing(hp.excite)
-        dur_ = hp.excite[3]-hp.excite[2]
-        curr_ = hp.excite[1]
-        fac_ = hp.excite[4]
-        IExcite = curr_*(squarewave1((t-hp.excite[2])/fac_,dur_/fac_) + 1)/2 
+    if !ismissing(nm.hp.excite)
+        dur_ = nm.hp.excite[3]-nm.hp.excite[2]
+        curr_ = nm.hp.excite[1]
+        fac_ = nm.hp.excite[4]
+        IExcite = curr_*(squarewave1((t-nm.hp.excite[2])/fac_,dur_/fac_) + 1)/2 
     else
         IExcite = 0
     end
 
     # Handle synapses
     rsyn = vcat([x[10*i-1:10*i] for i in 1:div(length(x),10)]...)
-    syn_curr = zeros(2*length(areas),length(areas))
+    syn_curr = zeros(2*length(nm.areas),2)
     
     ctr = 1
-    for area in areas
+    for area in nm.areas
         x_1 = x[(ctr-1)*10+1:ctr*10]
         syn_curr[(ctr-1)*2 + 1:ctr*2,:] = syn_current(area,x_1,t)
         ctr = ctr + 1
     end
     
-    for i in 1:(length(areas)-1)
+    for i in 1:(length(nm.areas)-1)
         syn_curr = hcat(syn_curr,syn_curr)
     end
     
@@ -107,7 +109,7 @@ function (nm::BioNM)(areas::Vector{NeuralArea},hp::HyperParam,dx,x,p,t,expr=noth
     # Finally, generate RHS
     ctr = 1
     I_EEG = nothing
-    for area in areas
+    for area in nm.areas
         x_1 = x[(ctr-1)*10+1:ctr*10]
         rsyn_1 = rsyn[(ctr-1)*2+1:ctr*2] 
         syn_curr_1 = syn_curr[(ctr-1)*2+1:ctr*2]
@@ -120,10 +122,15 @@ function (nm::BioNM)(areas::Vector{NeuralArea},hp::HyperParam,dx,x,p,t,expr=noth
             I_Ext = [0;0] .+ syn_curr_1
         end
         
-        dx[(ctr-1)*10+1:ctr*10] = [area(hp,x_1,t); syn_var_RHS(hp,area,rsyn_1,x_1,t,I_Ext)]
+        if !nm.hp.synapseoff
+            dx[(ctr-1)*10+1:ctr*10] = [area(nm.hp,x_1,t); syn_var_RHS(nm.hp,area,rsyn_1,x_1,t,I_Ext)]
+        else
+            dx[(ctr-1)*10+1:ctr*10] = [area(nm.hp,x_1,t); 0; 0]
+        end
+
         ctr = ctr+1
     end
-    if expr == "EEGraw"; return get_EEG(areas,syn_curr)
+    if expr == "EEGraw"; return get_EEG(nm.areas,syn_curr)
     elseif expr == "rsyn"; return rsyn
     elseif expr == "syn_curr"; return syn_curr
     elseif expr == "IExcite"; return IExcite
@@ -133,22 +140,28 @@ end
 
 
 
-function (nm::BioNM)(areas::Vector{NeuralArea},hp::HyperParam,expr::String=nothing)
+function (nm::BioNM)(expr::String=nothing)
     if ismissing(nm.sol)
         throw(TypeError(nm.sol),ODESolution,missing)
     else
-        tmp_ = hcat([nm(areas,hp,zeros(size(nm.sol.u[i])),nm.sol.u[i],0.0,nm.sol.t[i],expr) for i in 1:length(nm.sol.t)]...)
+        tmp_ = hcat([nm(zeros(size(nm.sol.u[i])),nm.sol.u[i],0.0,nm.sol.t[i],expr) for i in 1:length(nm.sol.t)]...)
         return tmp_'
     end
 end
 
-function (nm::BioNM)(areas::Vector{NeuralArea},hp::HyperParam,ctr,expr::String=nothing)
-    if ismissing(nm.sol)
-        throw(TypeError(nm.sol),ODESolution,missing)
-    else
-        tmp_ =  hcat([area(hp,nm.sol.u[i][(ctr-1)*10+1:10*ctr],nm.sol.t[i],expr) for i in 1:length(nm.sol.t)]...)
-        # return reshape(tmp_,size(tmp_)[2],size(tmp_)[1])
-        return tmp_'
+function (nm::BioNM)(area::Symbol,expr::String=nothing)
+    ctr = 1
+    for ar_ in nm.areas
+        if typeof(ar_.pop1).parameters[1] == eval(area)
+            if ismissing(nm.sol)
+                throw(TypeError(nm.sol),ODESolution,missing)
+            else
+                tmp_ =  hcat([ar_(nm.hp,nm.sol.u[i][(ctr-1)*10+1:10*ctr],nm.sol.t[i],expr) for i in 1:length(nm.sol.t)]...)
+                # return reshape(tmp_,size(tmp_)[2],size(tmp_)[1])
+                return tmp_'
+            end
+        end
+        ctr = ctr + 1
     end
 end
 

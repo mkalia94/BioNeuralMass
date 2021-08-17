@@ -13,7 +13,7 @@ export HyperParam, NeuralPopSoma
 export NeuralArea, get_ECS
 export Par 
 export BioNM
-export solve, plot
+export solve, plot,plot_syn
 
 
 end # module
