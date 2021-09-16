@@ -134,8 +134,10 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
     elseif expr == "rsyn"; return rsyn
     elseif expr == "syn_curr"; return syn_curr
     elseif expr == "IExcite"; return IExcite
+    else; return dx
     end
-    
+   
+
 end
 
 

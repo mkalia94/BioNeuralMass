@@ -43,7 +43,7 @@ cortex_.pop2.syn_deact = 0.003
 
 hp.excite = [20, 1000,3000, 4000] # [Current strength, start time, end time, large number]
 # hp.excite = missing # no stimulation
-hp.perc = 1 # Strength of ED ∈ [0,1], 0 -> complete ED, 1 -> No ED
+hp.perc = 1 # Available energy ∈ [0,1], 0 -> complete ED, 1 -> No ED
 hp.tstart = 1000 # ED start time
 hp.tend =  3000 # ED end time
 hp.tfinal = 4000 # Simulation end time
@@ -56,5 +56,5 @@ nm.areas = [thalamus_,cortex_] # Order of areas matters! First area is the one s
 nm.hp = hp
 
 solve(nm,saveat=hp.saveat,reltol=1e-9,abstol=1e-9) # Solve system using solve(nm)
-plot_syn(nm,1,"time (ms.)","ModerateED") # Plot synaptic currents, change second argument to 60*1000 to plot in min.
+# plot_syn(nm,1,"time (ms.)","ModerateED") # Plot synaptic currents, change second argument to 60*1000 to plot in min.
 # plot(nm,"Baseline") # Plots EEG and ion dynamics for both regions and saves as two files.
