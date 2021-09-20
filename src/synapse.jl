@@ -37,9 +37,11 @@ function firing_rate(pop::NeuralPopSoma,I,EK,ENa)
     Ith     = pop.p00 + pop.p10*EK + pop.p01*ENa + pop.p20*(EK)^2 + pop.p11*EK*ENa + pop.p02*(ENa)^2 + pop.p30*(EK)^3 + pop.p21*(EK)^2*ENa + pop.p12*EK*(ENa)^2 + pop.p03*(ENa)^3;  # 1st threshold
     kappa   = pop.q00 + pop.q10*EK + pop.q01*ENa + pop.q20*(EK)^2 + pop.q11*EK*ENa + pop.q02*(ENa)^2 + pop.q30*(EK)^3 + pop.q21*(EK)^2*ENa + pop.q12*EK*(ENa)^2 + pop.q03*(ENa)^3;  #
     Ith2    = pop.r00 + pop.r10*EK + pop.r01*ENa + pop.r20*(EK)^2 + pop.r11*EK*ENa + pop.r02*(ENa)^2 + pop.r30*(EK)^3 + pop.r21*(EK)^2*ENa + pop.r12*EK*(ENa)^2 + pop.r03*(ENa)^3;  # 2nd threshold
-    fun = x->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(pop.sigma)))*(kappa*sqrt(max(0,x-Ith)))*(1-(1+sign(x-Ith2))/2);
-    FR,_ = quadgk(fun,Ith,Ith2,Inf); # NEEDS: QuadGK
-    return FR
+    fun = (x,p)->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(pop.sigma)))*(kappa*sqrt(max(0,x-Ith)))*(1-(1+sign(x-Ith2))/2);
+    prob = QuadratureProblem(fun,0,Inf)
+    # FR,_ = quadgk(fun,Ith,Ith2,Inf); # NEEDS: QuadGK
+    FR_ = solve(prob, HCubatureJL(),reltol=1e-3,abstol=1e-3)
+    return FR_.u
 end
 
 function get_EEG(areas::Vector{NeuralArea},syn_curr)
@@ -91,18 +93,20 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
 
     # Handle synapses
     rsyn = vcat([x[10*i-1:10*i] for i in 1:div(length(x),10)]...)
-    syn_curr = zeros(2*length(nm.areas),2)
+    # syn_curr = zeros(2*length(nm.areas),2)
     
-    ctr = 1
-    for area in nm.areas
-        x_1 = x[(ctr-1)*10+1:ctr*10]
-        syn_curr[(ctr-1)*2 + 1:ctr*2,:] = syn_current(area,x_1,t)
-        ctr = ctr + 1
-    end
+    syn_curr = repeat(vcat([syn_current(nm.areas[ctr],x[(ctr-1)*10+1:ctr*10],t) for ctr in 1:length(nm.areas)]...),1,length(nm.areas))
     
-    for i in 1:(length(nm.areas)-1)
-        syn_curr = hcat(syn_curr,syn_curr)
-    end
+    # ctr = 1
+    # for area in nm.areas
+    #     x_1 = x[(ctr-1)*10+1:ctr*10]
+    #     syn_curr[(ctr-1)*2 + 1:ctr*2,:] = syn_current(area,x_1,t)
+    #     ctr = ctr + 1
+    # end
+    
+    # for i in 1:(length(nm.areas)-1)
+    #     syn_curr = hcat(syn_curr,syn_curr)
+    # end
     
     syn_curr = (nm.conn .* syn_curr)*rsyn
     
