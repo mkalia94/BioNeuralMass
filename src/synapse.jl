@@ -60,6 +60,7 @@ end
 function syn_var_RHS_pop(hp::HyperParam,pop::NeuralPopSoma,rsyn,x,x_ECS,t,I_Ext)
     NaCe = x_ECS[1]
     KCe = x_ECS[2]
+    O2e = x_ECS[5]
     NaCi = x[1]/x[4]
     KCi = x[2]/x[4]
     ENa = Nernst(pop,NaCe,NaCi)
@@ -67,8 +68,14 @@ function syn_var_RHS_pop(hp::HyperParam,pop::NeuralPopSoma,rsyn,x,x_ECS,t,I_Ext)
     I = I_Ext - pop(hp,x,x_ECS,t,"Ipump")
     FR = firing_rate(pop, I,EK, ENa)
     rsyn_act = syn_act(pop,FR)
-    return rsyn_act*(1-rsyn) - pop.syn_deact*rsyn
-end
+    block = 0.1 + 0.9/(1+exp((20-O2e)/3))
+    if typeof(pop).parameters[1] == Thalamus
+        return rsyn_act*(1-rsyn) - pop.syn_deact*rsyn
+    else
+        return block*(rsyn_act*(1-rsyn) - pop.syn_deact*rsyn)
+    end
+    end
+    
 
 function syn_var_RHS(hp::HyperParam,area::NeuralArea,rsyn,x,t,I_Ext)
     x_ECS = get_ECS(area,x)
@@ -92,10 +99,10 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
     end
 
     # Handle synapses
-    rsyn = vcat([x[10*i-1:10*i] for i in 1:div(length(x),10)]...)
+    rsyn = vcat([x[11*i-1:11*i] for i in 1:div(length(x),11)]...)
     # syn_curr = zeros(2*length(nm.areas),2)
     
-    syn_curr = repeat(vcat([syn_current(nm.areas[ctr],x[(ctr-1)*10+1:ctr*10],t) for ctr in 1:length(nm.areas)]...),1,length(nm.areas))
+    syn_curr = repeat(vcat([syn_current(nm.areas[ctr],x[(ctr-1)*11+1:ctr*11],t) for ctr in 1:length(nm.areas)]...),1,length(nm.areas))
     
     # ctr = 1
     # for area in nm.areas
@@ -114,7 +121,7 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
     ctr = 1
     I_EEG = nothing
     for area in nm.areas
-        x_1 = x[(ctr-1)*10+1:ctr*10]
+        x_1 = x[(ctr-1)*11+1:ctr*11]
         rsyn_1 = rsyn[(ctr-1)*2+1:ctr*2] 
         syn_curr_1 = syn_curr[(ctr-1)*2+1:ctr*2]
         
@@ -127,9 +134,9 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
         end
         
         if !nm.hp.synapseoff
-            dx[(ctr-1)*10+1:ctr*10] = [area(nm.hp,x_1,t); syn_var_RHS(nm.hp,area,rsyn_1,x_1,t,I_Ext)]
+            dx[(ctr-1)*11+1:ctr*11] = [area(nm.hp,x_1,t); syn_var_RHS(nm.hp,area,rsyn_1,x_1,t,I_Ext)]
         else
-            dx[(ctr-1)*10+1:ctr*10] = [area(nm.hp,x_1,t); 0; 0]
+            dx[(ctr-1)*11+1:ctr*11] = [area(nm.hp,x_1,t); 0; 0]
         end
 
         ctr = ctr+1
@@ -162,7 +169,7 @@ function (nm::BioNM)(area::Symbol,expr::String=nothing)
             if ismissing(nm.sol)
                 throw(TypeError(nm.sol),ODESolution,missing)
             else
-                tmp_ =  hcat([ar_(nm.hp,nm.sol.u[i][(ctr-1)*10+1:10*ctr],nm.sol.t[i],expr) for i in 1:length(nm.sol.t)]...)
+                tmp_ =  hcat([ar_(nm.hp,nm.sol.u[i][(ctr-1)*11+1:11*ctr],nm.sol.t[i],expr) for i in 1:length(nm.sol.t)]...)
                 # return reshape(tmp_,size(tmp_)[2],size(tmp_)[1])
                 return tmp_'
             end

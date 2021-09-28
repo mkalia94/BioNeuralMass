@@ -89,7 +89,15 @@ Base.@kwdef mutable struct NeuralPopSoma{A<:Area, B<:Behaviour}
     r03      ::Union{Float64,Missing}   = 0.0001089
     
     X0 :: Union{Vector{Float64},Missing} = missing
-
+    O2e_th :: Union{Float64,Missing} = 1.25
+    O2e_fac :: Union{Float64,Missing} = 0.1875
+    min_vATP :: Union{Float64,Missing} = 0.1
+    O2bath :: Union{Float64,Missing} = 2
+    O2_baseline :: Union{Float64,Missing} = 1.75
+    O2_alpha :: Union{Float64,Missing} = 1/6
+    O2_lambda :: Union{Float64,Missing} = 1
+    PvATP :: Union{Float64,Missing} = missing
+    O2_diff :: Union{Float64,Missing} = 0.33*1e-3
 end
 
 
@@ -119,14 +127,14 @@ function Nernst(pop,ext,in;z=1)
     return pop.R*pop.T/pop.F/z*log(ext/in)
 end
 
-function NKA(pop::NeuralPopSoma, NaCi, KCe, NaCe, V, IBlock)
+function NKA(pop::NeuralPopSoma, NaCi, KCe, NaCe, V, O2e)
     sigmapump = 1/7*(exp(NaCe/67.3)-1) 
     fpump = 1/(1+0.1245*exp(-0.1*pop.F/pop.R/pop.T*V) +
                0.0365*sigmapump*exp(-pop.F/pop.R/pop.T*V))
     if typeof(pop).parameters[1] == Thalamus
         return fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
     elseif typeof(pop).parameters[1] == Cortex 
-        return IBlock*fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
+        return 1/(1+exp((pop.O2e_th-O2e)/pop.O2e_fac))*fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
     end
 end
 
@@ -144,12 +152,10 @@ function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,t,expr=nothing) wher
     NaCi = NNa/Wi
     KCi = NK/Wi
     ClCi = NCl/Wi
-    NaCe, KCe, ClCe, We, NAe = x_ECS
+    NaCe, KCe, ClCe, We, O2e, NAe = x_ECS
     V = MemPot(pop, x)
     
     # Energy deprivation
-    IBlock = 1/(1+exp(hp.beta1*(t-hp.tstart))) + 1/(1+exp(-hp.beta2*(t-hp.tend)))
-    IBlock = hp.perc + (1-hp.perc)*IBlock
     
     # Leaks
     INaL = pop.PNaL*GHK(pop,1,NaCi,NaCe,V)
@@ -172,7 +178,7 @@ function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,t,expr=nothing) wher
     IClG = 1/(1+exp(-(V+10)/10))*pop.PClG*GHK(pop,-1,ClCi,ClCe,V)
 
     #Pump
-    Ipump = pop.PumpStrength*NKA(pop,NaCi,KCe,NaCe,V,IBlock)
+    Ipump = pop.PumpStrength*NKA(pop,NaCi,KCe,NaCe,V,O2e)
     
     # KCl
     JKCl = pop.UKCl*KCl(pop,KCi,KCe,ClCi,ClCe)

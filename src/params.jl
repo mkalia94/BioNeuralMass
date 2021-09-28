@@ -25,7 +25,7 @@ function Par(hp::HyperParam,area::NeuralArea,pop::NeuralPopSoma)
     
     # Pop 1
     X0 = [pop.NaCi0*pop.Wi0,pop.KCi0*pop.Wi0,pop.ClCi0*pop.Wi0,pop.Wi0] 
-    X_ECS = [pop.NaCe0, pop.KCe0,pop.ClCe0, area.We0, area.NAe]
+    X_ECS = [pop.NaCe0, pop.KCe0,pop.ClCe0, area.We0, pop.O2_baseline, area.NAe]
     INaG = pop(hp,X0,X_ECS, 0,"INaG")
     IKG = pop(hp,X0,X_ECS,0,"IKG")
     IClG = pop(hp,X0,X_ECS,0,"IClG")
@@ -37,6 +37,11 @@ function Par(hp::HyperParam,area::NeuralArea,pop::NeuralPopSoma)
     pop.PNaL = (-INaG - 3*Ipump)/INaL
     pop.PKL = (-IKG + 2*Ipump - pop.F*JKCl)/IKL
     pop.PClL = (-IClG + pop.F*JKCl)/IClL
+
+    IvATP = pop.min_vATP + (1-pop.min_vATP)/(1+exp((pop.O2e_th-pop.O2_baseline)/pop.O2e_fac))
+    pop.PvATP = Ipump/(70*IvATP)
+    pop.O2_diff = (pop.O2_alpha*pop.O2_lambda*(1/pop.F)*(2*Ipump/pop.Wi0+ 2*pop.PvATP*IvATP/pop.Wi0))/(pop.O2bath-pop.O2_baseline) 
+
 
     if pop.PNaL < 0
         throw(DomainError(pop.PNaL,"Na leak conductance should be nonnegative in Pop 1"))
@@ -63,5 +68,5 @@ end
 function Par(hp::HyperParam,area::NeuralArea)
     Par(hp,area,area.pop1)
     Par(hp,area,area.pop2)
-    area.X0 = [area.pop1.X0; area.pop2.X0; 0.008; 0.008]
+    area.X0 = [area.pop1.X0; area.pop2.X0; area.pop1.O2_baseline; 0.008; 0.008]
 end
