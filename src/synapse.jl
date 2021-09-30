@@ -38,7 +38,7 @@ function firing_rate(pop::NeuralPopSoma,I,EK,ENa)
     kappa   = pop.q00 + pop.q10*EK + pop.q01*ENa + pop.q20*(EK)^2 + pop.q11*EK*ENa + pop.q02*(ENa)^2 + pop.q30*(EK)^3 + pop.q21*(EK)^2*ENa + pop.q12*EK*(ENa)^2 + pop.q03*(ENa)^3;  #
     Ith2    = pop.r00 + pop.r10*EK + pop.r01*ENa + pop.r20*(EK)^2 + pop.r11*EK*ENa + pop.r02*(ENa)^2 + pop.r30*(EK)^3 + pop.r21*(EK)^2*ENa + pop.r12*EK*(ENa)^2 + pop.r03*(ENa)^3;  # 2nd threshold
     fun = x->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(pop.sigma)))*(kappa*sqrt(max(0,x-Ith)))*(1-(1+sign(x-Ith2))/2);
-    FR,_ = quadgk(fun,Ith,Ith2,Inf); # NEEDS: QuadGK
+    FR,_ = quadgk(fun,0,Ith,Ith2,Inf); # NEEDS: QuadGK
     return FR
 end
 

@@ -33,12 +33,11 @@ thalamus_.pop2.syn_act = 0.5
 thalamus_.pop2.syn_deact = 0.003
 
 # Moderate ischemia weakens cortical activation, makes it identical to cortex
-cortex_.pop1.syn_th = 0.2
-cortex_.pop1.syn_act = 1.25
-cortex_.pop1.syn_deact = 0.3
-cortex_.pop2.syn_th = 0.5
-cortex_.pop2.syn_act = 0.5
-cortex_.pop2.syn_deact = 0.003
+fac = 0.1
+cortex_.pop1.syn_act    = fac*cortex_.pop1.syn_act    
+cortex_.pop1.syn_deact  = fac*cortex_.pop1.syn_deact
+cortex_.pop2.syn_act    = fac*cortex_.pop2.syn_act   
+cortex_.pop2.syn_deact  = fac*cortex_.pop2.syn_deact 
 
 
 hp.excite = [20, 1000,3000, 4000] # [Current strength, start time, end time, large number]
