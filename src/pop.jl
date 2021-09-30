@@ -89,8 +89,9 @@ Base.@kwdef mutable struct NeuralPopSoma{A<:Area, B<:Behaviour}
     r03      ::Union{Float64,Missing}   = 0.0001089
     
     X0 :: Union{Vector{Float64},Missing} = missing
-    O2e_th :: Union{Float64,Missing} = 1.25
-    O2e_fac :: Union{Float64,Missing} = 0.1875
+    O2e_th_NKA :: Union{Float64,Missing} = 1.25
+    O2e_th_vATP :: Union{Float64,Missing} = 1.5
+    O2e_fac :: Union{Float64,Missing} = 1 # 0.1875
     min_vATP :: Union{Float64,Missing} = 0.1
     O2bath :: Union{Float64,Missing} = 2
     O2_baseline :: Union{Float64,Missing} = 1.75
@@ -134,7 +135,7 @@ function NKA(pop::NeuralPopSoma, NaCi, KCe, NaCe, V, O2e)
     if typeof(pop).parameters[1] == Thalamus
         return fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
     elseif typeof(pop).parameters[1] == Cortex 
-        return 1/(1+exp((pop.O2e_th-O2e)/pop.O2e_fac))*fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
+        return 1/(1+exp((pop.O2e_th_NKA-O2e)/pop.O2e_fac))*fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
     end
 end
 

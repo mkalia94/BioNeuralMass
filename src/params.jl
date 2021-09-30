@@ -38,7 +38,7 @@ function Par(hp::HyperParam,area::NeuralArea,pop::NeuralPopSoma)
     pop.PKL = (-IKG + 2*Ipump - pop.F*JKCl)/IKL
     pop.PClL = (-IClG + pop.F*JKCl)/IClL
 
-    IvATP = pop.min_vATP + (1-pop.min_vATP)/(1+exp((pop.O2e_th-pop.O2_baseline)/pop.O2e_fac))
+    IvATP = pop.min_vATP + (1-pop.min_vATP)/(1+exp((pop.O2e_th_vATP-pop.O2_baseline)/pop.O2e_fac))
     pop.PvATP = Ipump/(70*IvATP)
     pop.O2_diff = (pop.O2_alpha*pop.O2_lambda*(1/pop.F)*(2*Ipump/pop.Wi0+ 2*pop.PvATP*IvATP/pop.Wi0))/(pop.O2bath-pop.O2_baseline) 
 
