@@ -91,7 +91,7 @@ Base.@kwdef mutable struct NeuralPopSoma{A<:Area, B<:Behaviour}
     X0 :: Union{Vector{Float64},Missing} = missing
     O2e_th_NKA :: Union{Float64,Missing} = 1.25
     O2e_th_vATP :: Union{Float64,Missing} = 1.5
-    O2e_fac :: Union{Float64,Missing} = 1 # 0.1875
+    O2e_fac :: Union{Float64,Missing} = 0.05 # 0.1875
     min_vATP :: Union{Float64,Missing} = 0.1
     O2bath :: Union{Float64,Missing} = 2
     O2_baseline :: Union{Float64,Missing} = 1.75

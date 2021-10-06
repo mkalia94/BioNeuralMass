@@ -52,12 +52,12 @@ function Par(hp::HyperParam,area::NeuralArea,pop::NeuralPopSoma)
     end
 
     if typeof(pop).parameters[2] == Excitatory
-        pop.syn_act = 12.5
-        pop.syn_deact = 3.0
+        pop.syn_act = 12.5*2
+        pop.syn_deact = 3.0*2
         pop.syn_th = 0.2
     else
-        pop.syn_act = 5.0  
-        pop.syn_deact = 0.03
+        pop.syn_act = 5.0*2  
+        pop.syn_deact = 0.03*2
         pop.syn_th = 0.5
     end
 
