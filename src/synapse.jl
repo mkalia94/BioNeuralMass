@@ -37,11 +37,12 @@ function firing_rate(pop::NeuralPopSoma,I,EK,ENa)
     Ith     = pop.p00 + pop.p10*EK + pop.p01*ENa + pop.p20*(EK)^2 + pop.p11*EK*ENa + pop.p02*(ENa)^2 + pop.p30*(EK)^3 + pop.p21*(EK)^2*ENa + pop.p12*EK*(ENa)^2 + pop.p03*(ENa)^3;  # 1st threshold
     kappa   = pop.q00 + pop.q10*EK + pop.q01*ENa + pop.q20*(EK)^2 + pop.q11*EK*ENa + pop.q02*(ENa)^2 + pop.q30*(EK)^3 + pop.q21*(EK)^2*ENa + pop.q12*EK*(ENa)^2 + pop.q03*(ENa)^3;  #
     Ith2    = pop.r00 + pop.r10*EK + pop.r01*ENa + pop.r20*(EK)^2 + pop.r11*EK*ENa + pop.r02*(ENa)^2 + pop.r30*(EK)^3 + pop.r21*(EK)^2*ENa + pop.r12*EK*(ENa)^2 + pop.r03*(ENa)^3;  # 2nd threshold
-    fun = (x,p)->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(pop.sigma)))*(kappa*sqrt(max(0,x-Ith)))*(1-(1+sign(x-Ith2))/2);
-    prob1 = QuadratureProblem(fun,0,Inf)
-    # FR,_ = quadgk(fun,0,Ith,Ith2,Inf); # NEEDS: QuadGK
-    FR = solve(prob1, QuadGKJL(),reltol=1e-3,abstol=1e-3).u 
-    return FR
+    fun = (x)->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(2*pop.sigma^2)))*(kappa*sqrt(max(0,x-Ith)))*(1-(1+sign(x-Ith2))/2);
+    #prob1 = QuadratureProblem(fun,0,Inf)
+    FR,_ = quadgk(fun,-Inf,Inf); # NEEDS: QuadGK
+    #FR = solve(prob1, QuadGKJL(),reltol=1e-3,abstol=1e-3).u 
+    #FR = (kappa*sqrt(max(0,I-Ith)))*(1-(1+sign(I-Ith2))/2);
+   return FR
 end
 
 function get_EEG(areas::Vector{NeuralArea},syn_curr)
@@ -68,7 +69,7 @@ function syn_var_RHS_pop(hp::HyperParam,pop::NeuralPopSoma,rsyn,x,x_ECS,t,I_Ext)
     I = I_Ext - pop(hp,x,x_ECS,t,"Ipump")
     FR = firing_rate(pop, I,EK, ENa)
     rsyn_act = syn_act(pop,FR)
-    block = 0.1 + 0.9/(1+exp((pop.O2e_th_vATP-O2e)/pop.O2e_fac))
+    block = pop.min_vATP + (1-pop.min_vATP)/(1+exp((pop.O2e_th_vATP-O2e)/pop.O2e_fac))
     if typeof(pop).parameters[1] == Thalamus
         return rsyn_act*(1-rsyn) - pop.syn_deact*rsyn
     else

@@ -50,7 +50,7 @@ Base.@kwdef mutable struct NeuralPopSoma{A<:Area, B<:Behaviour}
     PKG        ::Union{Float64,Missing} = 40*1f-5                               # [1000 mum^3/ms] Maximal delayed rectifier K+ permeability 
     PClG       ::Union{Float64,Missing} = 1.95*1f-5                             # [1000 mum^3/ms] Maximal voltage-gated Cl- permeability   
     # Part 1I. Firing Rate related parameters
-    sigma      ::Union{Float64,Missing} = 1 
+    sigma      ::Union{Float64,Missing} = 3 
 
     # Part 1Ia. Coefficients of polynomial Ithreshold
     p00        ::Union{Float64,Missing}       = -213.8 
@@ -92,6 +92,7 @@ Base.@kwdef mutable struct NeuralPopSoma{A<:Area, B<:Behaviour}
     O2e_th_NKA :: Union{Float64,Missing} = 1.25
     O2e_th_vATP :: Union{Float64,Missing} = 1.5
     O2e_fac :: Union{Float64,Missing} = 0.05 # 0.1875
+    syn_fac :: Union{Float64,Missing} = 1
     min_vATP :: Union{Float64,Missing} = 0.1
     O2bath :: Union{Float64,Missing} = 2
     O2_baseline :: Union{Float64,Missing} = 1.75

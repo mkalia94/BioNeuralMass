@@ -416,6 +416,12 @@ git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
 uuid = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 version = "0.3.2"
 
+[[FileIO]]
+deps = ["Pkg", "Requires", "UUIDs"]
+git-tree-sha1 = "3c041d2ac0a52a12a27af2782b34900d9c3ee68c"
+uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+version = "1.11.1"
+
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
 git-tree-sha1 = "29890dfbc427afa59598b8cfcc10034719bd7744"
@@ -836,6 +842,12 @@ git-tree-sha1 = "e498ddeee6f9fdb4551ce855a46f54dbd900245f"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.1"
 
+[[MetaArrays]]
+deps = ["Requires"]
+git-tree-sha1 = "6647f7d45a9153162d6561957405c12088caf537"
+uuid = "36b8f3f0-b776-11e8-061f-1f20094e1fc8"
+version = "0.2.10"
+
 [[Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "bf210ce90b6c9eed32d25dbcae1ebc565df2687f"
@@ -981,6 +993,12 @@ deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
 git-tree-sha1 = "4dd403333bcf0909341cfe57ec115152f937d7d8"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
 version = "0.11.1"
+
+[[PaddedViews]]
+deps = ["OffsetArrays"]
+git-tree-sha1 = "646eed6f6a5d8df6708f15ea7e02a7a2c4fe4800"
+uuid = "5432bcbf-9aad-5242-b902-cca2824c8663"
+version = "0.5.10"
 
 [[ParameterizedFunctions]]
 deps = ["DataStructures", "DiffEqBase", "DocStringExtensions", "Latexify", "LinearAlgebra", "ModelingToolkit", "Reexport", "SciMLBase"]
@@ -1233,6 +1251,18 @@ git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
 uuid = "992d4aef-0814-514b-bc4d-f2e9a6c4116f"
 version = "1.0.3"
 
+[[SignalAnalysis]]
+deps = ["DSP", "Distributions", "DocStringExtensions", "FFTW", "LinearAlgebra", "MetaArrays", "PaddedViews", "Random", "Requires", "SignalBase", "Statistics", "WAV"]
+git-tree-sha1 = "da5e232a8fe1f08d047f3d1614ad9a25e439a390"
+uuid = "df1fea92-c066-49dd-8b36-eace3378ea47"
+version = "0.4.1"
+
+[[SignalBase]]
+deps = ["Unitful"]
+git-tree-sha1 = "14cb05cba5cc89d15e6098e7bb41dcef2606a10a"
+uuid = "00c44e92-20f5-44bc-8f45-a1dcef76ba38"
+version = "0.1.2"
+
 [[SimpleTraits]]
 deps = ["InteractiveUtils", "MacroTools"]
 git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
@@ -1451,6 +1481,12 @@ deps = ["LightGraphs"]
 git-tree-sha1 = "b9b450c99a3ca1cc1c6836f560d8d887bcbe356e"
 uuid = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 version = "0.1.2"
+
+[[WAV]]
+deps = ["Base64", "FileIO", "Libdl", "Logging"]
+git-tree-sha1 = "1d5dc6568ab6b2846efd10cc4d070bb6be73a6b8"
+uuid = "8149f6b0-98f6-5db9-b78f-408fbbb8ef88"
+version = "1.1.1"
 
 [[Waveforms]]
 git-tree-sha1 = "532113cb46e2da7019672f7879b97ada3edd3dc6"
