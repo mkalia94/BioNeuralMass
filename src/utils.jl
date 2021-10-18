@@ -128,9 +128,9 @@ function plot_analysis(nm::BioNM,name::String; kw...)
     EEG = filt(digitalfilter(responsetype,designmethod),nm("EEGraw"))
     EEG = reshape(EEG,length(EEG))
     
-    p1 = psd(EEG; nfft=3*1000/nm.hp.saveat,xlims=(1,40),window=DSP.hamming(3*1000/nm.hp.saveat),fs=1000/nm.hp.saveat)
-    y = tfd(EEG,Spectrogram(nfft=3000/nm.hp.saveat,noverlap=1000/nm.hp.saveat,window=DSP.hamming); fs=1000/nm.hp.saveat)
-    p2 = plot(y,clim(0,20),ylims=(0,20))
+    p1 = psd(EEG; nfft=Int(3*1000/nm.hp.saveat),xlims=(1,40),window=DSP.hamming(Int(3*1000/nm.hp.saveat)),fs=Int(1000/nm.hp.saveat))
+    y = tfd(EEG,Spectrogram(nfft=Int(3000/nm.hp.saveat),noverlap=Int(1000/nm.hp.saveat),window=DSP.hamming); fs=Int(1000/nm.hp.saveat))
+    p2 = plot(y,clim=(0,20),ylims=(0,20))
     plot(p1,p2,layout=(1,2);kw...)
     savefig("$(name)-PSD.pdf")
 end

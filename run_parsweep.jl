@@ -55,6 +55,29 @@ hp.saveat = 1 # save every at every x milliseconds
 nm.areas = [thalamus_,cortex_] # Order of areas matters! First area is the one stimulated. Take care of nm.conn!
 nm.hp = hp
 
+perc_ = [0.9; 0.8; 0.7; 0.6; 0.5]
+vATP_th = [1.1; 1.2; 1.3; 1.4; 1.5]
+NKA_th = [1.1; 1.2; 1.3; 1.4; 1.5]
+nm.hp.bandpass = [0.1,40.0]
+
+# nm(similar(nm.hp.X0),nm.hp.X0,0,0)
+
+for i in 1:length(perc_)
+    for j in 1:length(vATP_th)
+        for k in 1:length(NKA_th)
+            if vATP_th[j]>NKA_th[k]
+                continue
+            else
+                nm.hp.perc = perc_[i]
+                nm.hp.O2e_th_vATP = vATP_th[j]
+                nm.hp.O2e_th_NKA = NKA_th[k]
+                solve(nm,BS3(),reltol=1e-7,abstol=1e-7,saveat=nm.hp.saveat)
+                println("Perc ($(i)/$(length(perc_))), vATP($(j)/$(length(vATP_th))), NKA_th($(k)/$(length(NKA_th)))")
+                plot_analysis(nm,"Perc$(Int(perc_[i]*100))-vATP$(vATP_th[j])-NKA$(NKA_th[k])")
+            end
+        end
+    end
+end
 # solve(nm,saveat=hp.saveat,reltol=1e-9,abstol=1e-9) # Solve system using solve(nm)
 # solve(nm,CVODE_BDF(),saveat=hp.saveat,reltol=1e-7,abstol=1e-7) # Solve system using solve(nm)
 # plot_syn(nm,1,"time (ms.)","ModerateED") # Plot synaptic currents, change second argument to 60*1000 to plot in min.
