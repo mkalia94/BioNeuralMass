@@ -41,7 +41,7 @@ function firing_rate(pop::NeuralPopSoma,I,EK,ENa)
     #prob1 = QuadratureProblem(fun,0,Inf)
     FR,_ = quadgk(fun,-Inf,Inf); # NEEDS: QuadGK
     #FR = solve(prob1, QuadGKJL(),reltol=1e-3,abstol=1e-3).u 
-    #FR = (kappa*sqrt(max(0,I-Ith)))*(1-(1+sign(I-Ith2))/2);
+    # FR = (kappa*sqrt(max(0,I-Ith)))*(1-(1+sign(I-Ith2))/2);
    return FR
 end
 
@@ -121,6 +121,8 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
     # Finally, generate RHS
     ctr = 1
     I_EEG = nothing
+    FR = zeros(4)
+
     for area in nm.areas
         x_1 = x[(ctr-1)*11+1:ctr*11]
         rsyn_1 = rsyn[(ctr-1)*2+1:ctr*2] 
@@ -134,16 +136,30 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
             I_Ext = [0;0] .+ syn_curr_1
         end
         
-        if !nm.hp.synapseoff
+        if !nm.hp.synapseoff && expr == nothing
             dx[(ctr-1)*11+1:ctr*11] = [area(nm.hp,x_1,t); syn_var_RHS(nm.hp,area,rsyn_1,x_1,t,I_Ext)]
+        elseif expr == "FiringRate"
+            x_ECS = get_ECS(area,x_1)
+            EK1 = area.pop1.R*area.pop1.T/area.pop1.F*(log(x_ECS[2]/x_1[2]*x_1[4]))
+            ENa1 = area.pop1.R*area.pop1.T/area.pop1.F*(log(x_ECS[1]/x_1[1]*x_1[4]))
+            EK2 = area.pop1.R*area.pop1.T/area.pop1.F*(log(x_ECS[2]/x_1[6]*x_1[8]))
+            ENa2 = area.pop1.R*area.pop1.T/area.pop1.F*(log(x_ECS[2]/x_1[5]*x_1[8]))
+            Ipump = [area.pop1(nm.hp,x_1[1:4],x_ECS,t,"Ipump");
+                     area.pop2(nm.hp,x_1[5:8],x_ECS,t,"Ipump")]
+            II = I_Ext .- Ipump 
+            FR[(ctr-1)*2+1:ctr*2] = [firing_rate(area.pop1,II[1],EK1,ENa1);
+                                     firing_rate(area.pop2,II[2],EK2,ENa2)]
         else
             dx[(ctr-1)*11+1:ctr*11] = [area(nm.hp,x_1,t); 0; 0]
         end
 
         ctr = ctr+1
     end
+    
+
     if expr == "EEGraw"; return get_EEG(nm.areas,syn_curr)
     elseif expr == "rsyn"; return rsyn
+    elseif expr == "FiringRate"; return FR
     elseif expr == "syn_curr"; return syn_curr
     elseif expr == "IExcite"; return IExcite
     else; return dx
