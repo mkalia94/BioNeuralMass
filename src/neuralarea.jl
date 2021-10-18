@@ -28,11 +28,11 @@ function (area::NeuralArea)(hp::HyperParam,x,t,expr=nothing)
     W_pop1 = x_1[4]
     W_pop2 = x_2[4]
 
-    IvATP_1 = area.pop1.min_vATP + (1-area.pop1.min_vATP)/(1+exp((area.pop1.O2e_th_vATP-O2e)/area.pop1.O2e_fac))
-    IvATP_2 = area.pop2.min_vATP + (1-area.pop2.min_vATP)/(1+exp((area.pop2.O2e_th_vATP-O2e)/area.pop2.O2e_fac))
+    IvATP_1 = hp.min_vATP + (1-hp.min_vATP)/(1+exp((hp.O2e_th_vATP-O2e)/area.pop1.O2e_fac))
+    IvATP_2 = hp.min_vATP + (1-hp.min_vATP)/(1+exp((hp.O2e_th_vATP-O2e)/area.pop2.O2e_fac))
 
-    Ipump_1 = area.pop1.PumpStrength*NKA(area.pop1,x_1[1]/x_1[4],x_ECS[2],x_ECS[1],MemPot(area.pop1,x_1),O2e)
-    Ipump_2 = area.pop2.PumpStrength*NKA(area.pop2,x_2[1]/x_2[4],x_ECS[2],x_ECS[1],MemPot(area.pop2,x_2),O2e)
+    Ipump_1 = area.pop1.PumpStrength*NKA(hp,area.pop1,x_1[1]/x_1[4],x_ECS[2],x_ECS[1],MemPot(area.pop1,x_1),O2e)
+    Ipump_2 = area.pop2.PumpStrength*NKA(hp,area.pop2,x_2[1]/x_2[4],x_ECS[2],x_ECS[1],MemPot(area.pop2,x_2),O2e)
 
     
     IBlock = 1/(1+exp(hp.beta1*(t-hp.tstart))) + 1/(1+exp(-hp.beta2*(t-hp.tend)))

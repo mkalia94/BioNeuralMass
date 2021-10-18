@@ -69,7 +69,7 @@ function syn_var_RHS_pop(hp::HyperParam,pop::NeuralPopSoma,rsyn,x,x_ECS,t,I_Ext)
     I = I_Ext - pop(hp,x,x_ECS,t,"Ipump")
     FR = firing_rate(pop, I,EK, ENa)
     rsyn_act = syn_act(pop,FR)
-    block = pop.min_vATP + (1-pop.min_vATP)/(1+exp((pop.O2e_th_vATP-O2e)/pop.O2e_fac))
+    block = hp.min_vATP + (1-hp.min_vATP)/(1+exp((hp.O2e_th_vATP-O2e)/pop.O2e_fac))
     if typeof(pop).parameters[1] == Thalamus
         return rsyn_act*(1-rsyn) - pop.syn_deact*rsyn
     else
