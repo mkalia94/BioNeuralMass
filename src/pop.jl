@@ -112,10 +112,10 @@ Base.@kwdef mutable struct HyperParam
     saveat :: Union{Float64,Missing} = 0.01
     bandpass :: Union{Array{Float64},Missing} = [5.0; 40.0]
     synapseoff :: Bool
-    X0 :: Union{Array{Float64},Missing} = missing
     O2e_th_NKA :: Union{Float64,Missing} = 1.25
     O2e_th_vATP :: Union{Float64,Missing} = 1.5
     min_vATP :: Union{Float64,Missing} = 0.1
+    X0 :: Union{Array{Float64},Missing} = missing
 end             
 
 

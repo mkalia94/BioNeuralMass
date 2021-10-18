@@ -1,6 +1,6 @@
 module BioNeuralMass
 
-using DifferentialEquations, Plots, QuadGK, LaTeXStrings, DSP, Waveforms, Quadrature
+using DifferentialEquations, Plots, QuadGK, LaTeXStrings, DSP, Waveforms, Quadrature, SignalAnalysis
 include("pop.jl")
 include("neuralarea.jl")
 include("params.jl")
