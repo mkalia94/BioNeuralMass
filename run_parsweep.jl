@@ -65,7 +65,7 @@ nm.hp.bandpass = [0.1,40.0]
 for i in 1:length(perc_)
     for j in 1:length(vATP_th)
         for k in 1:length(NKA_th)
-            if vATP_th[j]>NKA_th[k]
+            if vATP_th[j]<NKA_th[k]
                 continue
             else
                 nm.hp.perc = perc_[i]
