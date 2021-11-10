@@ -24,6 +24,8 @@ Par(hp,thalamus_) # computes impermeants and leak conductances
 nm.conn = [ 0.0 2  0.5 0.0 ; 0.3 0.0 0.1 0.0; 0.3 0.0  0.3 5; 0.2 0 0.5 2.5] #Thalamus first
 # nm.conn = [ 0.7 5  0.0 0.0 ; 0.5 2.5 0.0 0.0; 0.5 0.0  0.7 5; 0.2 0 0.5 2.5] #Cortex first
 
+# Reducing pyramidal -> relay connection reduces amplitude
+
 # Thalamus baseline conditions 
 thalamus_.pop1.syn_th = 0.2 
 thalamus_.pop1.syn_act = 1.25
@@ -33,19 +35,19 @@ thalamus_.pop2.syn_act = 0.5
 thalamus_.pop2.syn_deact = 0.003
 
 # Moderate ischemia weakens cortical activation, makes it identical to cortex
-# fac = 0.1/3
-# cortex_.pop1.syn_act  = fac*cortex_.pop1.syn_act   
-# cortex_.pop1.syn_deact= fac*cortex_.pop1.syn_deact
-# cortex_.pop2.syn_act  = fac*cortex_.pop2.syn_act  
-# cortex_.pop2.syn_deact= fac*cortex_.pop2.syn_deact
+fac = 1
+cortex_.pop1.syn_act  = cortex_.pop1.syn_act   
+cortex_.pop1.syn_deact= cortex_.pop1.syn_deact
+cortex_.pop2.syn_act  = cortex_.pop2.syn_act  
+cortex_.pop2.syn_deact= cortex_.pop2.syn_deact
 
 
-hp.excite = [20, 1000,5*60*1e3, 1e8] # [Current strength, start time, end time, large number]
+hp.excite = [20, 1000,5*1e3, 1e8] # [Current strength, start time, end time, large number]
 # hp.excite = missing # no stimulation
-hp.perc = 0.7# Available energy ∈ [0,1], 0 -> complete ED, 1 -> No ED
-hp.tstart = 1*60*1e3 # ED start time
-hp.tend =  3*60*1e3 # ED end time
-hp.tfinal = 5*60*1e3 # Simulation end time
+hp.perc = 1# Available energy ∈ [0,1], 0 -> complete ED, 1 -> No ED
+hp.tstart = 1*1e3 # ED start time
+hp.tend =  3*1e3 # ED end time
+hp.tfinal = 5*1e3 # Simulation end time
 hp.beta1 = 5 # ED onset rate (higher is faster)
 hp.beta2 = 5 # ED offset rate (higher is faster)
 hp.saveat = 1 # save every at every x milliseconds
