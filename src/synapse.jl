@@ -116,6 +116,8 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
     #     syn_curr = hcat(syn_curr,syn_curr)
     # end
     
+    syn_curr_full = rsyn' .* (nm .* syn_curr)
+    syn_curr_full = [sum(syn_curr_full[1:2:end]) sum(syn_curr_full[2:2:end])] # [Excitatory Inhibitory]
     syn_curr = (nm.conn .* syn_curr)*rsyn
     
     # Finally, generate RHS
@@ -127,6 +129,7 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
         x_1 = x[(ctr-1)*11+1:ctr*11]
         rsyn_1 = rsyn[(ctr-1)*2+1:ctr*2] 
         syn_curr_1 = syn_curr[(ctr-1)*2+1:ctr*2]
+        syn_curr_full_1 = syn_curr_full[(ctr-1)*2+1:ctr*2,:]
         
         if ctr == 1 && typeof(area.pop1).parameters[2] == Excitatory
             I_Ext = [IExcite;0] .+ syn_curr_1
@@ -137,7 +140,7 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
         end
         
         if !nm.hp.synapseoff && expr == nothing
-            dx[(ctr-1)*11+1:ctr*11] = [area(nm.hp,x_1,t); syn_var_RHS(nm.hp,area,rsyn_1,x_1,t,I_Ext)]
+            dx[(ctr-1)*11+1:ctr*11] = [area(nm.hp,x_1,syn_curr_full_1,t); syn_var_RHS(nm.hp,area,rsyn_1,x_1,t,I_Ext)]
         elseif expr == "FiringRate"
             x_ECS = get_ECS(area,x_1)
             EK1 = area.pop1.R*area.pop1.T/area.pop1.F*(log(x_ECS[2]/x_1[2]*x_1[4]))

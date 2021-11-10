@@ -149,7 +149,7 @@ function KCl(pop,KCi,KCe,ClCi,ClCe)
 end
 
 # --------------- Somatic neural population right hand side -------------------- 
-function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,t,expr=nothing) where {A,B}
+function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,syn_curr,t,expr=nothing) where {A,B}
     NNa, NK, NCl, Wi = x
     NaCi = NNa/Wi
     KCi = NK/Wi
@@ -190,9 +190,9 @@ function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,t,expr=nothing) wher
     SCe = NaCe + KCe + ClCe + NAe/We
     
     if expr == nothing
-        return [-1/(pop.F)*(INaG + 3*Ipump + INaL);
+        return [-1/(pop.F)*(INaG + 3*Ipump + INaL) + 1/pop.F*syn_curr[1];
                 -1/(pop.F)*(IKG - 2*Ipump + IKL) - JKCl;
-                1/(pop.F)*(IClG + IClL) - JKCl;
+                1/(pop.F)*(IClG + IClL) - JKCl + 1/pop.F*syn_curr[2];
                 pop.PWi*pop.R*pop.T*(SCi-SCe)]
     elseif expr == "NaCi"  ; return NaCi    
     elseif expr == "V"; return V

@@ -20,7 +20,7 @@ function get_ECS(area::NeuralArea, x)
     return x_ECS
 end
 
-function (area::NeuralArea)(hp::HyperParam,x,t,expr=nothing)
+function (area::NeuralArea)(hp::HyperParam,x,syn_curr_full,t,expr=nothing)
     x_ECS = get_ECS(area, x)
     x_1 = x[1:4]
     x_2 = x[5:8]
@@ -45,15 +45,15 @@ function (area::NeuralArea)(hp::HyperParam,x,t,expr=nothing)
         return [area.pop1(hp,x_1,x_ECS,t); area.pop2(hp,x_2,x_ECS,t); O2_rhs]
     elseif expr[end] == 'E'
         if typeof(area.pop1).parameters[2] == Excitatory
-            return area.pop1(hp,x_1,x_ECS,t,expr[1:end-1])
+            return area.pop1(hp,x_1,x_ECS,syn_curr_full[1,:],t,expr[1:end-1])
         else
-            return area.pop2(hp,x_2,x_ECS,t,expr[1:end-1])
+            return area.pop2(hp,x_2,x_ECS,syn_curr_full[2,:],t,expr[1:end-1])
         end
     elseif expr[end] == 'I'
         if typeof(area.pop1).parameters[2] == Inhibitory
-            return area.pop1(hp,x_1,x_ECS,t,expr[1:end-1])
+            return area.pop1(hp,x_1,x_ECS,syn_curr_full[1,:],t,expr[1:end-1])
         else
-            return area.pop2(hp,x_2,x_ECS,t,expr[1:end-1])
+            return area.pop2(hp,x_2,x_ECS,syn_curr_full[2,:],t,expr[1:end-1])
         end
     end 
 end

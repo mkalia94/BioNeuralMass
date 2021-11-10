@@ -44,10 +44,10 @@ cortex_.pop2.syn_deact= cortex_.pop2.syn_deact
 
 hp.excite = [20, 1000,5*1e3, 1e8] # [Current strength, start time, end time, large number]
 # hp.excite = missing # no stimulation
-hp.perc = 0.8# Available energy ∈ [0,1], 0 -> complete ED, 1 -> No ED
-hp.tstart = 1*60*1e3 # ED start time
-hp.tend =  3*60*1e3 # ED end time
-hp.tfinal = 5*60*1e3 # Simulation end time
+hp.perc = 1# Available energy ∈ [0,1], 0 -> complete ED, 1 -> No ED
+hp.tstart = 1*1e3 # ED start time
+hp.tend =  3*1e3 # ED end time
+hp.tfinal = 5*1e3 # Simulation end time
 hp.beta1 = 5 # ED onset rate (higher is faster)
 hp.beta2 = 5 # ED offset rate (higher is faster)
 hp.saveat = 1 # save every at every x milliseconds
