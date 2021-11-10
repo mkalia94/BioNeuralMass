@@ -56,8 +56,9 @@ nm.areas = [thalamus_,cortex_] # Order of areas matters! First area is the one s
 nm.hp = hp
 
 perc_ = [0.9; 0.8; 0.7; 0.6; 0.5]
-vATP_th = [1.1; 1.2; 1.3; 1.4; 1.5]
-NKA_th = [1.1; 1.2; 1.3; 1.4; 1.5]
+perc_ = [0.8]
+vATP_th = [1.6]
+NKA_th = [1.1; 1.2; 1.3; 1.4; 1.5; 1.6]
 nm.hp.bandpass = [0.1,40.0]
 
 # nm(similar(nm.hp.X0),nm.hp.X0,0,0)
@@ -65,7 +66,7 @@ nm.hp.bandpass = [0.1,40.0]
 for i in 1:length(perc_)
     for j in 1:length(vATP_th)
         for k in 1:length(NKA_th)
-            if vATP_th[j]>NKA_th[k]
+            if vATP_th[j]<NKA_th[k]
                 continue
             else
                 nm.hp.perc = perc_[i]
@@ -73,11 +74,42 @@ for i in 1:length(perc_)
                 nm.hp.O2e_th_NKA = NKA_th[k]
                 solve(nm,BS3(),reltol=1e-7,abstol=1e-7,saveat=nm.hp.saveat)
                 println("Perc ($(i)/$(length(perc_))), vATP($(j)/$(length(vATP_th))), NKA_th($(k)/$(length(NKA_th)))")
+                println("Membrane potential: $(nm(:Cortex,"VE")[end])")
                 plot_analysis(nm,"Perc$(Int(perc_[i]*100))-vATP$(vATP_th[j])-NKA$(NKA_th[k])")
             end
         end
     end
 end
+
+# perc_ = [0.9; 0.8; 0.7; 0.6; 0.5]
+# fac_e = [1.0; 1.5; 2/0; 0.1; 0.5]
+# fac_i = [1.0; 1.5; 2.0; 0.1; 0.5]
+# nm.hp.bandpass = [0.1,40.0]
+# 
+# # nm(similar(nm.hp.X0),nm.hp.X0,0,0)
+# 
+# 
+# syn_act_1 = nm.areas[2].pop1.syn_act
+# syn_act_2 = nm.areas[2].pop2.syn_act
+# syn_deact_1 = nm.areas[2].pop1.syn_deact
+# syn_deact_2 = nm.areas[2].pop2.syn_deact
+# 
+# for i in 1:length(perc_)
+#     for j in 1:length(fac_e)
+#         for k in 1:length(fac_i)
+#                 nm.hp.perc = perc_[i]
+#                 nm.areas[2].pop1.syn_act = fac_e[j]*syn_act_1
+#                 nm.areas[2].pop2.syn_act = fac_i[k]*syn_act_2
+#                 nm.areas[2].pop1.syn_deact = fac_e[j]*syn_deact_1
+#                 nm.areas[2].pop2.syn_deact = fac_i[k]*syn_deact_2
+#                 solve(nm,BS3(),reltol=1e-7,abstol=1e-7,saveat=nm.hp.saveat)
+#                 println("Perc ($(i)/$(length(perc_))), FacE($(j)/$(length(fac_e))), FacI($(k)/$(length(fac_i)))")
+#                 plot_analysis(nm,"Perc$(Int(perc_[i]*100))-FacE$(fac_e[j])-FacI$(fac_i[k])")
+#         end
+#     end
+# end
+
+
 # solve(nm,saveat=hp.saveat,reltol=1e-9,abstol=1e-9) # Solve system using solve(nm)
 # solve(nm,CVODE_BDF(),saveat=hp.saveat,reltol=1e-7,abstol=1e-7) # Solve system using solve(nm)
 # plot_syn(nm,1,"time (ms.)","ModerateED") # Plot synaptic currents, change second argument to 60*1000 to plot in min.
