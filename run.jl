@@ -22,6 +22,7 @@ Par(hp,thalamus_) # computes impermeants and leak conductances
 # nm.conn is a matrix of connections, (i,j) refers to strength of current (j-> i).
 # nm.conn = [0.0 1 2.0 0.0; 0.5 0.0 1.5 0.0; 3.0 0.0 2.0  3.0; 3.0 0.0 1.0 0.5] #Thalamus first 
 nm.conn = [ 0.0 2  0.5 0.0 ; 0.3 0.0 0.1 0.0; 0.3 0.0  0.3 5; 0.2 0 0.5 2.5] #Thalamus first
+nm.conn = [ 0.0 2  0.5 0.0 ; 0.3 0.0 0.1 0.0; 0.5 0.0  0.3 5; 0.2 0 0.5 2.5] #Thalamus first
 # nm.conn = [ 0.7 5  0.0 0.0 ; 0.5 2.5 0.0 0.0; 0.5 0.0  0.7 5; 0.2 0 0.5 2.5] #Cortex first
 
 # Reducing pyramidal -> relay connection reduces amplitude
@@ -35,11 +36,11 @@ thalamus_.pop2.syn_act = 0.5
 thalamus_.pop2.syn_deact = 0.003
 
 # Moderate ischemia weakens cortical activation, makes it identical to cortex
-fac = 1
-cortex_.pop1.syn_act  = cortex_.pop1.syn_act   
-cortex_.pop1.syn_deact= cortex_.pop1.syn_deact
-cortex_.pop2.syn_act  = cortex_.pop2.syn_act  
-cortex_.pop2.syn_deact= cortex_.pop2.syn_deact
+fac = 0.6
+cortex_.pop1.syn_act  = fac*cortex_.pop1.syn_act   
+cortex_.pop1.syn_deact= fac*cortex_.pop1.syn_deact
+cortex_.pop2.syn_act  = fac*cortex_.pop2.syn_act  
+cortex_.pop2.syn_deact= fac*cortex_.pop2.syn_deact
 
 
 hp.excite = [20, 1000,5*1e3, 1e8] # [Current strength, start time, end time, large number]

@@ -192,7 +192,7 @@ function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,syn_curr,t,expr=noth
     if expr == nothing
         return [-1/(pop.F)*(INaG + 3*Ipump + INaL) + 1/pop.F*syn_curr[1];
                 -1/(pop.F)*(IKG - 2*Ipump + IKL) - JKCl;
-                1/(pop.F)*(IClG + IClL) - JKCl + 1/pop.F*syn_curr[2];
+                1/(pop.F)*(IClG + IClL) - JKCl - 1/pop.F*syn_curr[2];
                 pop.PWi*pop.R*pop.T*(SCi-SCe)]
     elseif expr == "NaCi"  ; return NaCi    
     elseif expr == "V"; return V

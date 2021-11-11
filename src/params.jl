@@ -26,14 +26,15 @@ function Par(hp::HyperParam,area::NeuralArea,pop::NeuralPopSoma)
     # Pop 1
     X0 = [pop.NaCi0*pop.Wi0,pop.KCi0*pop.Wi0,pop.ClCi0*pop.Wi0,pop.Wi0] 
     X_ECS = [pop.NaCe0, pop.KCe0,pop.ClCe0, area.We0, pop.O2_baseline, area.NAe]
-    INaG = pop(hp,X0,X_ECS, 0,"INaG")
-    IKG = pop(hp,X0,X_ECS,0,"IKG")
-    IClG = pop(hp,X0,X_ECS,0,"IClG")
-    IClL = pop(hp,X0,X_ECS,0,"IClL")/pop.PClL
-    INaL = pop(hp,X0,X_ECS,0,"INaL")/pop.PNaL
-    IKL = pop(hp,X0,X_ECS,0,"IKL")/pop.PKL
-    JKCl = pop(hp,X0,X_ECS,0,"JKCl")
-    Ipump = pop(hp,X0,X_ECS,0,"Ipump")
+
+    INaG = pop(hp,X0,X_ECS,zeros(2), 0,"INaG")
+    IKG = pop(hp,X0,X_ECS,zeros(2),0,"IKG")
+    IClG = pop(hp,X0,X_ECS,zeros(2),0,"IClG")
+    IClL = pop(hp,X0,X_ECS,zeros(2),0,"IClL")/pop.PClL
+    INaL = pop(hp,X0,X_ECS,zeros(2),0,"INaL")/pop.PNaL
+    IKL = pop(hp,X0,X_ECS,zeros(2),0,"IKL")/pop.PKL
+    JKCl = pop(hp,X0,X_ECS,zeros(2),0,"JKCl")
+    Ipump = pop(hp,X0,X_ECS,zeros(2),0,"Ipump")
     pop.PNaL = (-INaG - 3*Ipump)/INaL
     pop.PKL = (-IKG + 2*Ipump - pop.F*JKCl)/IKL
     pop.PClL = (-IClG + pop.F*JKCl)/IClL

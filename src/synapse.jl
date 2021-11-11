@@ -66,7 +66,7 @@ function syn_var_RHS_pop(hp::HyperParam,pop::NeuralPopSoma,rsyn,x,x_ECS,t,I_Ext)
     KCi = x[2]/x[4]
     ENa = Nernst(pop,NaCe,NaCi)
     EK = Nernst(pop,KCe,KCi)
-    I = I_Ext - pop(hp,x,x_ECS,t,"Ipump")
+    I = I_Ext - pop(hp,x,x_ECS,zeros(2),t,"Ipump")
     FR = firing_rate(pop, I,EK, ENa)
     rsyn_act = syn_act(pop,FR)
     block = hp.min_vATP + (1-hp.min_vATP)/(1+exp((hp.O2e_th_vATP-O2e)/pop.O2e_fac))
@@ -116,8 +116,8 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
     #     syn_curr = hcat(syn_curr,syn_curr)
     # end
     
-    syn_curr_full = rsyn' .* (nm .* syn_curr)
-    syn_curr_full = [sum(syn_curr_full[1:2:end]) sum(syn_curr_full[2:2:end])] # [Excitatory Inhibitory]
+    syn_curr_full = rsyn' .* (nm.conn .* syn_curr)
+    syn_curr_full = [sum(syn_curr_full[:,1:2:end],dims=2) sum(syn_curr_full[:,2:2:end],dims=2)] # [Excitatory Inhibitory]
     syn_curr = (nm.conn .* syn_curr)*rsyn
     
     # Finally, generate RHS
@@ -153,7 +153,7 @@ function (nm::BioNM)(dx,x,p,t,expr=nothing)
             FR[(ctr-1)*2+1:ctr*2] = [firing_rate(area.pop1,II[1],EK1,ENa1);
                                      firing_rate(area.pop2,II[2],EK2,ENa2)]
         else
-            dx[(ctr-1)*11+1:ctr*11] = [area(nm.hp,x_1,t); 0; 0]
+            dx[(ctr-1)*11+1:ctr*11] = [area(nm.hp,x_1,syn_curr_full_1,t); 0; 0]
         end
 
         ctr = ctr+1
@@ -189,7 +189,7 @@ function (nm::BioNM)(area::Symbol,expr::String=nothing)
             if ismissing(nm.sol)
                 throw(TypeError(nm.sol),ODESolution,missing)
             else
-                tmp_ =  hcat([ar_(nm.hp,nm.sol.u[i][(ctr-1)*11+1:11*ctr],nm.sol.t[i],expr) for i in 1:length(nm.sol.t)]...)
+                tmp_ =  hcat([ar_(nm.hp,nm.sol.u[i][(ctr-1)*11+1:11*ctr],zeros(2,2),nm.sol.t[i],expr) for i in 1:length(nm.sol.t)]...)
                 # return reshape(tmp_,size(tmp_)[2],size(tmp_)[1])
                 return tmp_'
             end

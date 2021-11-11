@@ -42,7 +42,7 @@ function (area::NeuralArea)(hp::HyperParam,x,syn_curr_full,t,expr=nothing)
     O2_rhs = -area.pop1.O2_alpha*area.pop1.O2_lambda*(1/area.pop1.F)*(Ipump_1/W_pop1 + Ipump_2/W_pop2 + area.pop1.PvATP*IvATP_1/W_pop1 + area.pop2.PvATP*IvATP_2/W_pop2) + area.pop1.O2_diff*(O2bath - O2e)
 
     if expr == nothing
-        return [area.pop1(hp,x_1,x_ECS,t); area.pop2(hp,x_2,x_ECS,t); O2_rhs]
+        return [area.pop1(hp,x_1,x_ECS,syn_curr_full[1,:],t); area.pop2(hp,x_2,x_ECS,syn_curr_full[2,:],t); O2_rhs]
     elseif expr[end] == 'E'
         if typeof(area.pop1).parameters[2] == Excitatory
             return area.pop1(hp,x_1,x_ECS,syn_curr_full[1,:],t,expr[1:end-1])
