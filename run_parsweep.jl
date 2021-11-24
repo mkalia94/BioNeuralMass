@@ -55,31 +55,25 @@ hp.saveat = 4 # save every at every x milliseconds
 nm.areas = [thalamus_,cortex_] # Order of areas matters! First area is the one stimulated. Take care of nm.conn!
 nm.hp = hp
 
-fac = [0.3; 0.6; 1]
+fac = range(0,1,length=10)
 conn = deepcopy(nm.conn)
 
 for i in 1:length(fac)
     for j in 1:length(fac)
-        for k in 1:length(fac)
-            for l in 1:length(fac)
-                nm.hp.perc = 1
-                nm.hp.tfinal = 2*1e4
-                nm.hp.saveat = 1
-                nm.conn[1,3] = fac[i]*conn[1,3] 
-                nm.conn[2,3] = fac[j]*conn[2,3] 
-                nm.conn[3,1] = fac[k]*conn[3,1] 
-                nm.conn[4,1] = fac[l]*conn[4,1] 
-                solve(nm,saveat=nm.hp.saveat, reltol=1e-7, abstol=1e-7)
-                println("Status ($(i)/$(length(fac))), ($(j)/$(length(fac))), ($(k)/$(length(fac))), ($(l)/$(length(fac)))")
-                plot_analysis(nm,"TC-$(i)-$(j)-$(k)-$(l)")
-                plot_syn(nm,1,"time (ms.)","TC-$(i)-$(j)-$(k)-$(l)-Syn")
-            end
-        end
+        nm.hp.perc = 1
+        nm.hp.tfinal = 2*1e4
+        nm.hp.saveat = 0.1
+        nm.conn[3,1] = fac[i]*conn[3,1] 
+        nm.conn[4,1] = fac[j]*conn[4,1] 
+        solve(nm,saveat=nm.hp.saveat, reltol=1e-7, abstol=1e-7)
+        println("Status ($(i)/$(length(fac))), ($(j)/$(length(fac)))")
+        plot_analysis(nm,"TC-$(i)-$(j)")
+        plot_syn(nm,n.hp.saveat,"time (ms.)","TC-$(i)-$(j)-Syn")
     end
 end
 
 
-perc_ = [0.85]
+perc_ = [0.8]
 # perc_ = [0.8]
 vATP_th = [1.1; 1.2; 1.3; 1.4; 1.5; 1.6]
 NKA_th = [1.1; 1.2; 1.3; 1.4; 1.5; 1.6]
@@ -94,13 +88,13 @@ nm.hp.saveat = 4
 for i in 1:length(perc_)
     for j in 1:length(vATP_th)
         for k in 1:length(NKA_th)
-            if vATP_th[j]!=NKA_th[k]
+            if vATP_th[j] < NKA_th[k]
                 continue
             else
                 nm.hp.perc = perc_[i]
                 nm.hp.O2e_th_vATP = vATP_th[j]
                 nm.hp.O2e_th_NKA = NKA_th[k]
-                solve(nm,saveat=nm.hp.saveat, reltol=1e-7, abstol=1e-7)
+                solve(nm,saveat=nm.hp.saveat)
                 println("Perc ($(i)/$(length(perc_))), vATP($(j)/$(length(vATP_th))), NKA_th($(k)/$(length(NKA_th)))")
                 println("Membrane potential: $(nm(:Cortex,"VE")[end])")
                 plot_analysis(nm,"Inf-Perc$(Int(perc_[i]*100))-vATP$(vATP_th[j])-NKA$(NKA_th[k])")
