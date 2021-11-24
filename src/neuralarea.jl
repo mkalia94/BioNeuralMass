@@ -37,7 +37,12 @@ function (area::NeuralArea)(hp::HyperParam,x,syn_curr_full,t,expr=nothing)
     
     IBlock = 1/(1+exp(hp.beta1*(t-hp.tstart))) + 1/(1+exp(-hp.beta2*(t-hp.tend)))
     IBlock = hp.perc + (1-hp.perc)*IBlock
+    if typeof(area.pop1).parameters[1] == Thalamus
+        IBlock = 1
+    end
+    
     O2bath = IBlock*area.pop1.O2bath
+    
 
     O2_rhs = -area.pop1.O2_alpha*area.pop1.O2_lambda*(1/area.pop1.F)*(Ipump_1/W_pop1 + Ipump_2/W_pop2 + area.pop1.PvATP*IvATP_1/W_pop1 + area.pop2.PvATP*IvATP_2/W_pop2) + area.pop1.O2_diff*(O2bath - O2e)
 

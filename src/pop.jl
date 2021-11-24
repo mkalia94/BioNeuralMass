@@ -49,8 +49,12 @@ Base.@kwdef mutable struct NeuralPopSoma{A<:Area, B<:Behaviour}
     PNaG       ::Union{Float64,Missing} = 80*1f-5                               # [1000 mum^3/ms] Maximal transient Na+ permeability         
     PKG        ::Union{Float64,Missing} = 40*1f-5                               # [1000 mum^3/ms] Maximal delayed rectifier K+ permeability 
     PClG       ::Union{Float64,Missing} = 1.95*1f-5                             # [1000 mum^3/ms] Maximal voltage-gated Cl- permeability   
+    PNaSyn     ::Union{Float64,Missing} = 1
+    PClSyn     ::Union{Float64,Missing} = 1
+    
     # Part 1I. Firing Rate related parameters
-    sigma      ::Union{Float64,Missing} = 3 
+    sigma      ::Union{Float64,Missing} = 3
+
 
     # Part 1Ia. Coefficients of polynomial Ithreshold
     p00        ::Union{Float64,Missing}       = -213.8 
@@ -114,6 +118,7 @@ Base.@kwdef mutable struct HyperParam
     synapseoff :: Bool
     O2e_th_NKA :: Union{Float64,Missing} = 1.25
     O2e_th_vATP :: Union{Float64,Missing} = 1.5
+    syn_ion     ::Union{Float64,Missing} = 0.01
     min_vATP :: Union{Float64,Missing} = 0.1
     X0 :: Union{Array{Float64},Missing} = missing
 end             
@@ -190,9 +195,9 @@ function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,syn_curr,t,expr=noth
     SCe = NaCe + KCe + ClCe + NAe/We
     
     if expr == nothing
-        return [-1/(pop.F)*(INaG + 3*Ipump + INaL) + 1/pop.F*syn_curr[1];
+        return [-1/(pop.F)*(INaG + 3*Ipump + INaL) + 1/pop.F*hp.syn_ion*pop.PNaSyn*syn_curr[1];
                 -1/(pop.F)*(IKG - 2*Ipump + IKL) - JKCl;
-                1/(pop.F)*(IClG + IClL) - JKCl - 1/pop.F*syn_curr[2];
+                1/(pop.F)*(IClG + IClL) - JKCl - 1/pop.F*hp.syn_ion*pop.PClSyn*syn_curr[2];
                 pop.PWi*pop.R*pop.T*(SCi-SCe)]
     elseif expr == "NaCi"  ; return NaCi    
     elseif expr == "V"; return V

@@ -40,7 +40,7 @@ function firing_rate(pop::NeuralPopSoma,I,EK,ENa)
     fun = (x)->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(2*pop.sigma^2)))*(kappa*sqrt(max(0,x-Ith)))*(1-(1+sign(x-Ith2))/2);
     #prob1 = QuadratureProblem(fun,0,Inf)
     FR,_ = quadgk(fun,-Inf,Inf); # NEEDS: QuadGK
-    #FR = solve(prob1, QuadGKJL(),reltol=1e-3,abstol=1e-3).u 
+    # FR = solve(prob1, QuadGKJL(),reltol=1e-3,abstol=1e-3).u 
     # FR = (kappa*sqrt(max(0,I-Ith)))*(1-(1+sign(I-Ith2))/2);
    return FR
 end
