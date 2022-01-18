@@ -1,8 +1,7 @@
-
 using Pkg
 dir = pwd()
 Pkg.activate("$(dir)/.")
-using BioNeuralMass, Sundials, DifferentialEquations, Plots, Waveforms
+using BioNeuralMass, Sundials, DifferentialEquations, Plots, Waveforms, DSP, SignalAnalysis, Peaks
 
 nm = BioNM() # Sets up neural mass struct
 
@@ -55,54 +54,143 @@ hp.saveat = 4 # save every at every x milliseconds
 nm.areas = [thalamus_,cortex_] # Order of areas matters! First area is the one stimulated. Take care of nm.conn!
 nm.hp = hp
 
-fac = range(0,1,length=10)
-conn = deepcopy(nm.conn)
 
-for i in 1:length(fac)
-    for j in 1:length(fac)
-        nm.hp.perc = 1
-        nm.hp.tfinal = 2*1e4
-        nm.hp.saveat = 0.1
-        nm.conn[3,1] = fac[i]*conn[3,1] 
-        nm.conn[4,1] = fac[j]*conn[4,1] 
-        solve(nm,saveat=nm.hp.saveat, reltol=1e-7, abstol=1e-7)
-        println("Status ($(i)/$(length(fac))), ($(j)/$(length(fac)))")
-        plot_analysis(nm,"TC-$(i)-$(j)")
-        plot_syn(nm,n.hp.saveat,"time (ms.)","TC-$(i)-$(j)-Syn")
-    end
-end
+# First sweep: disappearance, left MMOs
+# npeaks = zeros(100)
+# periods = zeros(100)
+# conn = deepcopy(nm.conn)
+# conn41 = range(0.11,0.13,length=100)
+# EEG = nothing
 
 
-perc_ = [0.8]
+#for i in [90,91]
+#     global EEG
+#     nm.hp.perc = 1
+#     nm.hp.tfinal = 1e4
+#     nm.hp.saveat = 0.1
+#     nm.conn[3,1] = 0.225 
+#     nm.conn[4,1] = conn41[i]
+#     try
+#         solve(nm,saveat=nm.hp.saveat, reltol=1e-7, abstol=1e-7)
+#     catch e
+#         continue
+#     end
+#     EEG = nm("EEGraw")[:,1]
+#     peaks, _ = findmaxima(EEG[80000:100000])
+#      val, ind = findmax(diff(peaks))
+#     xx = findall(x->abs(x-val)/val<0.1,diff(peaks))
+#     try 
+#         npeaks[i] = diff(xx)[end]
+#     catch e
+#          continue
+#     end
+#     if ind - diff(xx)[end]<1
+#         periods[i] = sum(diff(peaks)[ind+1:ind + diff(xx)[end]])
+#     else
+#         periods[i] = sum(diff(peaks)[ind-diff(xx)[end]+1:ind])
+#     end
+#     println("Status ($(i)/$(length(conn41))), nPeaks: $(npeaks[i]), Period: $(periods[i])")
+# end#
+
+ #First sweep: disappearance, right MMOs
+ npeaks2 = zeros(100)
+ periods2 = zeros(100)
+ conn = deepcopy(nm.conn)
+ conn41 = range(0,0.04,length=100)
+ 
+ for i in 1:length(conn41)
+     nm.hp.perc = 1
+     nm.hp.tfinal = 1e5
+     nm.hp.saveat = 0.1
+     nm.conn[3,1] = 0.475 
+     nm.conn[4,1] = conn41[i]
+     try
+         solve(nm,saveat=nm.hp.saveat, reltol=1e-7, abstol=1e-7)
+     catch e
+         continue
+     end
+     EEG = nm("EEGraw")[:,1]
+     l = length(EEG)
+     peaks, _ = findmaxima(EEG[l-20000:l])
+     val, ind = findmax(diff(peaks))
+     xx = findall(x->abs(x-val)/val<0.1,diff(peaks))
+     try 
+         npeaks2[i] = diff(xx)[end]
+         if ind - diff(xx)[end]<1
+            periods2[i] = sum(diff(peaks)[ind+1:ind + diff(xx)[end]])
+         else
+            periods2[i] = sum(diff(peaks)[ind-diff(xx)[end]+1:ind])
+         end
+     catch e
+         npeaks2[i] = xx[end]
+         if ind - xx[end]<1
+            periods2[i] = sum(diff(peaks)[ind+1:ind + xx[end]])
+         else
+            periods2[i] = sum(diff(peaks)[ind-xx[end]+1:ind])
+         end
+     end
+          println("Status ($(i)/$(length(conn41))), nPeaks: $(npeaks2[i]), Period: $(periods2[i])")
+ end
+
+
+# fac2 = range(0,2,length=50)
+# fac1 = range(0.2,1.2,length=25)
+# freqs = zeros(25,50)
+# amps = zeros(25,50)
+# conn = deepcopy(nm.conn)
+# 
+# for i in 1:length(fac1)
+#     for j in 1:length(fac2)
+#         nm.hp.perc = 1
+#         nm.hp.tfinal = 5e3
+#         nm.hp.saveat = 0.1
+#         nm.conn[3,1] = fac1[i]*conn[3,1] 
+#         nm.conn[4,1] = fac2[j]*conn[4,1] 
+#         solve(nm,saveat=nm.hp.saveat, reltol=1e-7, abstol=1e-7)
+#         println("Status ($(i)/$(length(fac))), ($(j)/$(length(fac)))")
+#         EEG = nm("EEGraw")[:,1]
+#         pp = periodogram(EEG,fs = 1000/nm.hp.saveat)
+#         peaks,vals = findmaxima(pp.power)
+#         _, ind = findmax(vals)
+#         if pp.freq[peaks[ind]] > 40
+#             continue
+#         end
+#         freqs[i,j] = pp.freq[peaks[ind]]
+#         amps[i,j] = maximum(EEG[end-1000:end])-minimum(EEG[end-1000:end])
+#     end
+# end
+# 
+# 
 # perc_ = [0.8]
-vATP_th = [1.1; 1.2; 1.3; 1.4; 1.5; 1.6]
-NKA_th = [1.1; 1.2; 1.3; 1.4; 1.5; 1.6]
-nm.hp.bandpass = [0.1,40.0]
+# perc_ = [0.8]
+# vATP_th = [1.1; 1.2; 1.3; 1.4; 1.5; 1.6]
+# NKA_th = [1.1; 1.2; 1.3; 1.4; 1.5; 1.6]
+# nm.hp.bandpass = [0.1,40.0]
 
-nm.hp.tstart = 0.5*60*1e3 # ED start time
-nm.hp.tend =  10*60*1e3 # ED end time
-nm.hp.tfinal = 15*60*1e3 # Simulation end time
-nm.hp.saveat = 4
+# nm.hp.tstart = 0.5*60*1e3 # ED start time
+# nm.hp.tend =  10*60*1e3 # ED end time
+# nm.hp.tfinal = 15*60*1e3 # Simulation end time
+# nm.hp.saveat = 4
 # nm(similar(nm.hp.X0),nm.hp.X0,0,0)
 
-for i in 1:length(perc_)
-    for j in 1:length(vATP_th)
-        for k in 1:length(NKA_th)
-            if vATP_th[j] < NKA_th[k]
-                continue
-            else
-                nm.hp.perc = perc_[i]
-                nm.hp.O2e_th_vATP = vATP_th[j]
-                nm.hp.O2e_th_NKA = NKA_th[k]
-                solve(nm,saveat=nm.hp.saveat)
-                println("Perc ($(i)/$(length(perc_))), vATP($(j)/$(length(vATP_th))), NKA_th($(k)/$(length(NKA_th)))")
-                println("Membrane potential: $(nm(:Cortex,"VE")[end])")
-                plot_analysis(nm,"Inf-Perc$(Int(perc_[i]*100))-vATP$(vATP_th[j])-NKA$(NKA_th[k])")
-                plot_syn(nm,1,"time (ms.)","Inf-Perc$(Int(perc_[i]*100))-vATP$(vATP_th[j])-NKA$(NKA_th[k])-Syn")
-            end
-        end
-    end
-end
+# for i in 1:length(perc_)
+#     for j in 1:length(vATP_th)
+#         for k in 1:length(NKA_th)
+#             if vATP_th[j] < NKA_th[k]
+#                 continue
+#             else
+#                 nm.hp.perc = perc_[i]
+#                 nm.hp.O2e_th_vATP = vATP_th[j]
+#                 nm.hp.O2e_th_NKA = NKA_th[k]
+#                 solve(nm,saveat=nm.hp.saveat)
+#                 println("Perc ($(i)/$(length(perc_))), vATP($(j)/$(length(vATP_th))), NKA_th($(k)/$(length(NKA_th)))")
+#                 println("Membrane potential: $(nm(:Cortex,"VE")[end])")
+#                 plot_analysis(nm,"Inf-Perc$(Int(perc_[i]*100))-vATP$(vATP_th[j])-NKA$(NKA_th[k])")
+#                 plot_syn(nm,1,"time (ms.)","Inf-Perc$(Int(perc_[i]*100))-vATP$(vATP_th[j])-NKA$(NKA_th[k])-Syn")
+#             end
+#         end
+#     end
+# end
 
 # perc_ = [0.9; 0.8; 0.7; 0.6; 0.5]
 # perc_ = [0.8]
