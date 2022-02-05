@@ -20,12 +20,9 @@ Par(hp,thalamus_) # computes impermeants and leak conductances
 
 # Set up neural mass
 # nm.conn is a matrix of connections, (i,j) refers to strength of current (j-> i).
-# nm.conn = [0.0 1 2.0 0.0; 0.5 0.0 1.5 0.0; 3.0 0.0 2.0  3.0; 3.0 0.0 1.0 0.5] #Thalamus first 
 nm.conn = [ 0.0 2  0.5 0.0 ; 0.3 0.0 0.1 0.0; 0.3 0.0  0.3 5; 0.2 0 0.5 2.5] #Thalamus first
 nm.conn = [ 0.0 2  0.5 0.0 ; 0.3 0.0 0.1 0.0; 0.5 0.0  0.3 5; 0.2 0 0.5 2.5] #Thalamus first
-# nm.conn = [ 0.7 5  0.0 0.0 ; 0.5 2.5 0.0 0.0; 0.5 0.0  0.7 5; 0.2 0 0.5 2.5] #Cortex first
 
-# Reducing pyramidal -> relay connection reduces amplitude
 
 # Thalamus baseline conditions 
 thalamus_.pop1.syn_th = 0.2 
@@ -42,29 +39,29 @@ cortex_.pop1.syn_deact= fac*cortex_.pop1.syn_deact
 cortex_.pop2.syn_act  = fac*cortex_.pop2.syn_act  
 cortex_.pop2.syn_deact= fac*cortex_.pop2.syn_deact
 
-
-hp.excite = [20, 1000,2*1e6, 1e8] # [Current strength, start time, end time, large number]
+# Hyperparameterd
+hp.excite = [20, 1000,5*60*1e3,1e8] # [Current strength, start time, end time, large number]
 # hp.excite = missing # no stimulation
 hp.perc = 1# Available energy ∈ [0,1], 0 -> complete ED, 1 -> No ED
-hp.tstart = 1*1e3 # ED start time
-hp.tend =  3*1e3 # ED end time
-hp.tfinal = 5e4 # Simulation end time
+hp.tstart = 1*60*1e3 # ED start time
+hp.tend =  3*60*1e3 # ED end time
+hp.tfinal = 1e4 # Simulation end time
 hp.beta1 = 5 # ED onset rate (higher is faster)
 hp.beta2 = 5 # ED offset rate (higher is faster)
-hp.saveat = 4 # save every at every x milliseconds
-hp.O2e_th_vATP = 1.5
-hp.O2e_th_NKA = 1.25
+hp.saveat = 0.1 # save every at every x milliseconds
+hp.O2e_th_vATP = 1.5 # vATPase oxygen threshold
+hp.O2e_th_NKA = 1.5 # NKA oxygen threshold
 
 nm.areas = [thalamus_,cortex_] # Order of areas matters! First area is the one stimulated. Take care of nm.conn!
 nm.hp = hp
 
 
-fac2 = range(0,2,length=50)
-fac1 = range(0.2,1.2,length=25)
-fac = range(0,2,length=20)
-conn41 = range(0.0,0.04,length=100)
-nm.conn[3,1] = 0.475
-nm.conn[4,1] = conn41[100]
+#fac2 = range(0,2,length=50)
+#fac1 = range(0.2,1.2,length=25)
+#fac = range(0,2,length=20)
+#conn41 = range(0.0,0.04,length=100)
+#nm.conn[3,1] = 0.45
+#nm.conn[4,1] = 0.18
 # nm.conn[4,1] = 0.1255 
 
 # solve(nm,saveat=hp.saveat,reltol=1e-9,abstol=1e-9) # Solve system using solve(nm)
