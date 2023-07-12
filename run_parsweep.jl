@@ -187,7 +187,7 @@ end
 
 
 
-# ####################### Left MMOs - parameter sweep ########################## #######
+# ####################### subthreshold MMOs - parameter sweep ########################## #######
 
 # npeaks = zeros(100)
 # periods = zeros(100)
@@ -196,7 +196,7 @@ end
 # EEG = nothing
 
 
-# for i in [90,91]
+# for i in length(conn41)
 #     global EEG
 #     nm.hp.perc = 1
 #     nm.hp.tfinal = 1e4
@@ -229,7 +229,7 @@ end
 
 
 
-# ####################### Left MMOs - parameter sweep ########################## #######
+# ####################### suprathreshold MMOs - parameter sweep ########################## #######
 
 # npeaks2 = zeros(100)
 # periods2 = zeros(100)
