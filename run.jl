@@ -45,15 +45,15 @@ cortex_.pop2.syn_deact= fac*cortex_.pop2.syn_deact
 
 hp.excite = [20, 1000,2*1e6, 1e8] # [Current strength, start time, end time, large number]
 # hp.excite = missing # no stimulation
-hp.perc = 1# Available energy ∈ [0,1], 0 -> complete ED, 1 -> No ED
-hp.tstart = 1*1e3 # ED start time
-hp.tend =  3*1e3 # ED end time
-hp.tfinal = 2*1e4 # Simulation end time
+hp.perc = 0.8# Available energy ∈ [0,1], 0 -> complete ED, 1 -> No ED
+hp.tstart = 2*60*1e3 # ED start time
+hp.tend =  10*60*1e3 # ED end time
+hp.tfinal = 20*60*1e3 # Simulation end time
 hp.beta1 = 5 # ED onset rate (higher is faster)
 hp.beta2 = 5 # ED offset rate (higher is faster)
 hp.saveat = 4 # save every at every x milliseconds
 hp.O2e_th_vATP = 1.5
-hp.O2e_th_NKA = 1.5
+hp.O2e_th_NKA = 1.1
 
 nm.areas = [thalamus_,cortex_] # Order of areas matters! First area is the one stimulated. Take care of nm.conn!
 nm.hp = hp
