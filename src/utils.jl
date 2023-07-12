@@ -1,5 +1,6 @@
 import DifferentialEquations: solve
 import Plots: plot
+using SignalAnalysis
 
 function solve(nm::BioNM,alg=Tsit5();kw...)
     X0 = []
@@ -120,7 +121,17 @@ function plot_syn(nm::BioNM,fac=1,xlabel="time (ms)", plotname=nothing;kw...)
         savefig("$(plotname)-SynapticCurrents.pdf")
     end
 end
-        
- 
-        
+      
+function plot_analysis(nm::BioNM,name::String; kw...)
+    responsetype = Bandpass(nm.hp.bandpass[1],nm.hp.bandpass[2],fs=1000/(nm.hp.saveat))
+    designmethod = Butterworth(4)
+    EEG = filt(digitalfilter(responsetype,designmethod),nm("EEGraw"))
+    EEG = reshape(EEG,length(EEG))
+    
+    p1 = psd(EEG; nfft=Int(3*1000/nm.hp.saveat),xlims=(1,40),window=DSP.hamming(Int(3*1000/nm.hp.saveat)),fs=Int(1000/nm.hp.saveat))
+    y = tfd(EEG,Spectrogram(nfft=Int(3000/nm.hp.saveat),noverlap=Int(1000/nm.hp.saveat),window=DSP.hamming); fs=Int(1000/nm.hp.saveat))
+    p2 = plot(y,clim=(0,20),ylims=(0,20))
+    plot(p1,p2,layout=(1,2);kw...)
+    savefig("$(name)-PSD.pdf")
+end
 

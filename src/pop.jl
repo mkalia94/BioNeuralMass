@@ -49,8 +49,12 @@ Base.@kwdef mutable struct NeuralPopSoma{A<:Area, B<:Behaviour}
     PNaG       ::Union{Float64,Missing} = 80*1f-5                               # [1000 mum^3/ms] Maximal transient Na+ permeability         
     PKG        ::Union{Float64,Missing} = 40*1f-5                               # [1000 mum^3/ms] Maximal delayed rectifier K+ permeability 
     PClG       ::Union{Float64,Missing} = 1.95*1f-5                             # [1000 mum^3/ms] Maximal voltage-gated Cl- permeability   
+    PNaSyn     ::Union{Float64,Missing} = 1
+    PClSyn     ::Union{Float64,Missing} = 1
+    
     # Part 1I. Firing Rate related parameters
-    sigma      ::Union{Float64,Missing} = 1 
+    sigma      ::Union{Float64,Missing} = 3
+
 
     # Part 1Ia. Coefficients of polynomial Ithreshold
     p00        ::Union{Float64,Missing}       = -213.8 
@@ -89,7 +93,14 @@ Base.@kwdef mutable struct NeuralPopSoma{A<:Area, B<:Behaviour}
     r03      ::Union{Float64,Missing}   = 0.0001089
     
     X0 :: Union{Vector{Float64},Missing} = missing
-
+    O2e_fac :: Union{Float64,Missing} = 0.05 # 0.1875
+    syn_fac :: Union{Float64,Missing} = 1
+    O2bath :: Union{Float64,Missing} = 2
+    O2_baseline :: Union{Float64,Missing} = 1.75
+    O2_alpha :: Union{Float64,Missing} = 1/6
+    O2_lambda :: Union{Float64,Missing} = 1
+    PvATP :: Union{Float64,Missing} = missing
+    O2_diff :: Union{Float64,Missing} = 0.33*1e-3
 end
 
 
@@ -105,6 +116,10 @@ Base.@kwdef mutable struct HyperParam
     saveat :: Union{Float64,Missing} = 0.01
     bandpass :: Union{Array{Float64},Missing} = [5.0; 40.0]
     synapseoff :: Bool
+    O2e_th_NKA :: Union{Float64,Missing} = 1.25
+    O2e_th_vATP :: Union{Float64,Missing} = 1.5
+    syn_ion     ::Union{Float64,Missing} = 0.01
+    min_vATP :: Union{Float64,Missing} = 0.1
     X0 :: Union{Array{Float64},Missing} = missing
 end             
 
@@ -119,14 +134,14 @@ function Nernst(pop,ext,in;z=1)
     return pop.R*pop.T/pop.F/z*log(ext/in)
 end
 
-function NKA(pop::NeuralPopSoma, NaCi, KCe, NaCe, V, IBlock)
+function NKA(hp::HyperParam,pop::NeuralPopSoma, NaCi, KCe, NaCe, V, O2e)
     sigmapump = 1/7*(exp(NaCe/67.3)-1) 
     fpump = 1/(1+0.1245*exp(-0.1*pop.F/pop.R/pop.T*V) +
                0.0365*sigmapump*exp(-pop.F/pop.R/pop.T*V))
     if typeof(pop).parameters[1] == Thalamus
         return fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
     elseif typeof(pop).parameters[1] == Cortex 
-        return IBlock*fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
+        return 1/(1+exp((hp.O2e_th_NKA-O2e)/pop.O2e_fac))*fpump*(NaCi^(1.5)/(NaCi^(1.5)+pop.nka_na^(1.5)))*(KCe/(KCe+pop.nka_k))
     end
 end
 
@@ -139,17 +154,15 @@ function KCl(pop,KCi,KCe,ClCi,ClCe)
 end
 
 # --------------- Somatic neural population right hand side -------------------- 
-function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,t,expr=nothing) where {A,B}
+function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,syn_curr,t,expr=nothing) where {A,B}
     NNa, NK, NCl, Wi = x
     NaCi = NNa/Wi
     KCi = NK/Wi
     ClCi = NCl/Wi
-    NaCe, KCe, ClCe, We, NAe = x_ECS
+    NaCe, KCe, ClCe, We, O2e, NAe = x_ECS
     V = MemPot(pop, x)
     
     # Energy deprivation
-    IBlock = 1/(1+exp(hp.beta1*(t-hp.tstart))) + 1/(1+exp(-hp.beta2*(t-hp.tend)))
-    IBlock = hp.perc + (1-hp.perc)*IBlock
     
     # Leaks
     INaL = pop.PNaL*GHK(pop,1,NaCi,NaCe,V)
@@ -172,7 +185,7 @@ function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,t,expr=nothing) wher
     IClG = 1/(1+exp(-(V+10)/10))*pop.PClG*GHK(pop,-1,ClCi,ClCe,V)
 
     #Pump
-    Ipump = pop.PumpStrength*NKA(pop,NaCi,KCe,NaCe,V,IBlock)
+    Ipump = pop.PumpStrength*NKA(hp,pop,NaCi,KCe,NaCe,V,O2e)
     
     # KCl
     JKCl = pop.UKCl*KCl(pop,KCi,KCe,ClCi,ClCe)
@@ -182,9 +195,9 @@ function (pop::NeuralPopSoma{A,  B})(hp::HyperParam,x,x_ECS,t,expr=nothing) wher
     SCe = NaCe + KCe + ClCe + NAe/We
     
     if expr == nothing
-        return [-1/(pop.F)*(INaG + 3*Ipump + INaL);
+        return [-1/(pop.F)*(INaG + 3*Ipump + INaL) + 1/pop.F*hp.syn_ion*pop.PNaSyn*syn_curr[1];
                 -1/(pop.F)*(IKG - 2*Ipump + IKL) - JKCl;
-                1/(pop.F)*(IClG + IClL) - JKCl;
+                1/(pop.F)*(IClG + IClL) - JKCl - 1/pop.F*hp.syn_ion*pop.PClSyn*syn_curr[2];
                 pop.PWi*pop.R*pop.T*(SCi-SCe)]
     elseif expr == "NaCi"  ; return NaCi    
     elseif expr == "V"; return V
