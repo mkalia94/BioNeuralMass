@@ -32,12 +32,24 @@ function syn_act(pop::NeuralPopSoma,FR)
     return pop.syn_act*(FR)/(FR + pop.syn_th);
 end
 
+
+function simpson(fun,a,b)
+    x = range(a,b,length=500)
+    w = ones(length(x))
+    w[2:end-1] .= 4.0
+    w[3:end-1] .= 2.0
+    return sum(fun.(x) .* w .* (x[2]-x[1])/2)
+end
+
 # Firing Rate
 function firing_rate(pop::NeuralPopSoma,I,EK,ENa)
     Ith     = pop.p00 + pop.p10*EK + pop.p01*ENa + pop.p20*(EK)^2 + pop.p11*EK*ENa + pop.p02*(ENa)^2 + pop.p30*(EK)^3 + pop.p21*(EK)^2*ENa + pop.p12*EK*(ENa)^2 + pop.p03*(ENa)^3;  # 1st threshold
     kappa   = pop.q00 + pop.q10*EK + pop.q01*ENa + pop.q20*(EK)^2 + pop.q11*EK*ENa + pop.q02*(ENa)^2 + pop.q30*(EK)^3 + pop.q21*(EK)^2*ENa + pop.q12*EK*(ENa)^2 + pop.q03*(ENa)^3;  #
     Ith2    = pop.r00 + pop.r10*EK + pop.r01*ENa + pop.r20*(EK)^2 + pop.r11*EK*ENa + pop.r02*(ENa)^2 + pop.r30*(EK)^3 + pop.r21*(EK)^2*ENa + pop.r12*EK*(ENa)^2 + pop.r03*(ENa)^3;  # 2nd threshold
-    fun = (x)->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(2*pop.sigma^2)))*(kappa*sqrt(max(0,x-Ith)))*(1-(1+sign(x-Ith2))/2);
+    # fun = (x)->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(2*pop.sigma^2)))*(kappa*sqrt(max(0,x-Ith)))*(1-(1+sign(x-Ith2))/2);
+    fun = (x)->((1/(pop.sigma*sqrt(2*pi)))*exp(-(I-x)^2/(2*pop.sigma^2)))*(kappa*sqrt(max(0,x-Ith)))*(1/(1+exp(0.1*(x-Ith2))));
+    # FR = simpson(fun,I-40,I+40);
+
     #prob1 = QuadratureProblem(fun,0,Inf)
     FR,_ = quadgk(fun,-Inf,Inf); # NEEDS: QuadGK
     # FR = solve(prob1, QuadGKJL(),reltol=1e-3,abstol=1e-3).u 
